@@ -1,0 +1,28 @@
+{% extends "_layouts/cp" %}
+{% set title = "Audit entry #" ~ entry.id %}
+{% set crumbs = [
+    { label: "Editor MCP", url: cpUrl("editor-mcp") },
+    { label: "Audit Log", url: cpUrl("editor-mcp/audit") }
+] %}
+
+{% block content %}
+<dl class="meta">
+    <dt>Request ID</dt><dd><code>{{ entry.requestId }}</code></dd>
+    <dt>When</dt><dd>{{ entry.dateCreated }}</dd>
+    <dt>Tool</dt><dd><code>{{ entry.tool }}</code></dd>
+    <dt>Status</dt><dd>{{ entry.status }}</dd>
+    <dt>User ID</dt><dd>{{ entry.userId }}</dd>
+    <dt>Client ID</dt><dd>{{ entry.clientId }}</dd>
+    <dt>Scopes</dt><dd><code>{{ entry.scopes }}</code></dd>
+    <dt>Duration</dt><dd>{{ entry.durationMs }}ms</dd>
+    <dt>IP</dt><dd>{{ entry.ipAddress }}</dd>
+    <dt>User-Agent</dt><dd>{{ entry.userAgent }}</dd>
+    {% if entry.errorMessage %}
+    <dt>Error</dt><dd><code>{{ entry.errorCode }}</code> — {{ entry.errorMessage }}</dd>
+    {% endif %}
+    <dt>Structural params</dt><dd><pre>{{ entry.paramsStructural|json_decode|json_encode(constant("JSON_PRETTY_PRINT")) }}</pre></dd>
+    {% if entry.paramsVerbose %}
+    <dt>Verbose params</dt><dd><pre>{{ entry.paramsVerbose|json_decode|json_encode(constant("JSON_PRETTY_PRINT")) }}</pre></dd>
+    {% endif %}
+</dl>
+{% endblock %}

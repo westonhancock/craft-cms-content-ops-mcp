@@ -1,0 +1,46 @@
+{% extends "_layouts/cp" %}
+{% set title = "Authorize MCP access" %}
+{% set fullPageForm = true %}
+
+{# CSP: frame-ancestors none stops embedded-iframe consent attacks #}
+{% set noindex = true %}
+{% header "Content-Security-Policy: frame-ancestors 'none'" %}
+{% header "X-Frame-Options: DENY" %}
+
+{% block content %}
+<div class="content-pane">
+    <h1>Authorize <em>{{ clientName }}</em></h1>
+
+    <p>You are signed in as <strong>{{ user.username }}</strong>.</p>
+
+    <p>The client at <code>{{ redirectUri }}</code> is requesting access to your Craft account with the following permissions:</p>
+
+    <ul class="bullets">
+        {% for scope in scopes %}
+            <li>
+                <strong>{{ scope }}</strong>
+                {% if scope in highStakes %}
+                    <span class="warning" style="color:#c00; margin-left:0.5em;">[high-trust]</span>
+                {% endif %}
+                <div style="margin-left:1em; opacity:0.8;">
+                    {{ scopeDescriptions[scope] ?? "(no description available)" }}
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <p class="info" style="margin-top:1em;">
+        Anything you grant here can only be used <em>as you</em> — the AI assistant inherits exactly the Craft permissions you already have, and every action is logged in the Editor MCP audit log.
+    </p>
+
+    <form method="post" action="{{ siteUrl('oauth/consent') }}">
+        {{ csrfInput() }}
+        <input type="hidden" name="stateKey" value="{{ stateKey }}">
+
+        <div class="buttons" style="margin-top:1em;">
+            <button type="submit" name="decision" value="allow" class="btn submit">Allow</button>
+            <button type="submit" name="decision" value="deny" class="btn">Deny</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

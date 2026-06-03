@@ -1,0 +1,60 @@
+{% extends "_layouts/cp" %}
+{% set title = "Editor MCP — Registered Clients" %}
+{% set selectedSubnavItem = "clients" %}
+{% set crumbs = [{ label: "Editor MCP", url: cpUrl("editor-mcp") }] %}
+
+{% block content %}
+<p class="info">Clients are registered automatically via Dynamic Client Registration. When <code>dcrRequireApproval</code> is on, clients must be approved here before they can complete OAuth.</p>
+
+<table class="data fullwidth">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Client ID</th>
+            <th>Public</th>
+            <th>Registered from</th>
+            <th>Approved</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in clients %}
+        <tr>
+            <td><strong>{{ c.name }}</strong></td>
+            <td><code>{{ c.clientId }}</code></td>
+            <td>{{ c.isPublic ? "yes (PKCE)" : "no" }}</td>
+            <td>{{ c.registeredFromIp ?? "—" }} on {{ c.dateCreated|date("Y-m-d") }}</td>
+            <td>
+                {% if c.approved %}<span class="status green"></span> yes
+                {% else %}<span class="status orange"></span> pending{% endif %}
+            </td>
+            <td>
+                {% if c.revoked %}<span class="status red"></span> revoked
+                {% else %}<span class="status green"></span> active{% endif %}
+            </td>
+            <td>
+                {% if not c.approved %}
+                <form method="post" style="display:inline">
+                    {{ csrfInput() }}
+                    {{ actionInput("editor-mcp/clients/approve") }}
+                    <input type="hidden" name="id" value="{{ c.id }}">
+                    <button class="btn small submit" type="submit">Approve</button>
+                </form>
+                {% endif %}
+                {% if not c.revoked %}
+                <form method="post" style="display:inline">
+                    {{ csrfInput() }}
+                    {{ actionInput("editor-mcp/clients/revoke") }}
+                    <input type="hidden" name="id" value="{{ c.id }}">
+                    <button class="btn small delete" type="submit">Revoke</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><em>No clients registered yet.</em></td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
