@@ -214,6 +214,24 @@ class McpController extends Controller
                 'durationMs' => (int) ((microtime(true) - $started) * 1000),
             ]);
             throw $e;
+        } catch (\Throwable $e) {
+            // Unexpected exception from a tool path — record it before bubbling
+            // so the audit log captures every invocation, not just the ones
+            // that fail through the ToolException convention.
+            Plugin::$plugin->audit->log([
+                'requestId' => bin2hex(random_bytes(8)),
+                'userId' => $tokenClaims['userId'],
+                'tool' => $name,
+                'scopes' => $tokenClaims['scopes'],
+                'params' => is_array($args) ? $args : [],
+                'status' => 'error',
+                'errorCode' => 'internal',
+                'errorMessage' => $e->getMessage(),
+                'ipAddress' => Craft::$app->getRequest()->getUserIP(),
+                'userAgent' => Craft::$app->getRequest()->getUserAgent(),
+                'durationMs' => (int) ((microtime(true) - $started) * 1000),
+            ]);
+            throw new ToolException(-32603, 'Internal error', previous: $e);
         }
     }
 

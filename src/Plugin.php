@@ -169,7 +169,7 @@ class Plugin extends BasePlugin
                 $event->navItems[] = [
                     'url' => 'editor-mcp',
                     'label' => 'Editor MCP',
-                    'icon' => '@editor-mcp/icon-mask.svg',
+                    'icon' => dirname(__DIR__) . '/icon-mask.svg',
                     'subnav' => [
                         'tokens' => ['label' => 'Tokens', 'url' => 'editor-mcp/tokens'],
                         'clients' => ['label' => 'Clients', 'url' => 'editor-mcp/clients'],

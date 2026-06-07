@@ -17,8 +17,9 @@ class ToolException extends \RuntimeException
         private readonly int $jsonRpcCode,
         string $message,
         private readonly ?array $data = null,
+        ?\Throwable $previous = null,
     ) {
-        parent::__construct($message);
+        parent::__construct($message, 0, $previous);
     }
 
     public function getJsonRpcCode(): int
