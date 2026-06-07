@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\oauth\Repositories;
@@ -18,10 +19,15 @@ use westonhancock\editormcp\oauth\Entities\UserEntity;
  */
 class UserRepository implements UserRepositoryInterface
 {
+    /**
+     * @param string $username
+     * @param string $password
+     * @param string $grantType
+     */
     public function getUserEntityByUserCredentials(
-        string $username,
-        string $password,
-        string $grantType,
+        $username,
+        $password,
+        $grantType,
         ClientEntityInterface $clientEntity,
     ): ?UserEntityInterface {
         // Password grant is disabled in v1. Returning null forces the OAuth server

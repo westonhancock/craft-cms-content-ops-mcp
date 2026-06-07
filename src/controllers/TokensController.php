@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\controllers;
@@ -6,9 +7,7 @@ namespace westonhancock\editormcp\controllers;
 use Craft;
 use craft\helpers\UrlHelper;
 use craft\web\Controller;
-use westonhancock\editormcp\Plugin;
 use westonhancock\editormcp\records\AccessTokenRecord;
-use westonhancock\editormcp\records\OAuthClientRecord;
 use westonhancock\editormcp\records\RefreshTokenRecord;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;

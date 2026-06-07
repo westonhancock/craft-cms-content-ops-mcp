@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\tools\impl;
@@ -11,7 +12,10 @@ use westonhancock\editormcp\tools\ToolException;
 
 class CreateEntryTool implements Tool
 {
-    public function name(): string { return 'create_entry'; }
+    public function name(): string
+    {
+        return 'create_entry';
+    }
 
     public function description(): string
     {
@@ -60,7 +64,10 @@ class CreateEntryTool implements Tool
         $entryType = null;
         if ($typeHandle) {
             foreach ($entryTypes as $t) {
-                if ($t->handle === $typeHandle) { $entryType = $t; break; }
+                if ($t->handle === $typeHandle) {
+                    $entryType = $t;
+                    break;
+                }
             }
             if (!$entryType) {
                 throw new ToolException(-32602, "Entry type not found: $typeHandle");

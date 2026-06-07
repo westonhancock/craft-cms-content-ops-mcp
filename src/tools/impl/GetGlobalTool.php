@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\tools\impl;
@@ -9,7 +10,10 @@ use westonhancock\editormcp\tools\ToolException;
 
 class GetGlobalTool implements Tool
 {
-    public function name(): string { return 'get_global'; }
+    public function name(): string
+    {
+        return 'get_global';
+    }
 
     public function description(): string
     {
@@ -42,7 +46,7 @@ class GetGlobalTool implements Tool
             throw new ToolException(-32004, 'No permission to view this global set');
         }
         $fields = [];
-        foreach ($set->getFieldLayout()?->getCustomFields() ?? [] as $f) {
+        foreach ($set->getFieldLayout()->getCustomFields() as $f) {
             $val = $set->getFieldValue($f->handle);
             $fields[$f->handle] = is_scalar($val) || $val === null ? $val : (string) $val;
         }

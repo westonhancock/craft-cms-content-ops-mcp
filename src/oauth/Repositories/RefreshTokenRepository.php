@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\oauth\Repositories;
@@ -42,9 +43,10 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
         $record->save(false);
     }
 
-    public function revokeRefreshToken(string $tokenId): void
+    /** @param string $tokenId */
+    public function revokeRefreshToken($tokenId): void
     {
-        $record = RefreshTokenRecord::findOne(['tokenId' => $tokenId]);
+        $record = RefreshTokenRecord::findOne(['tokenId' => (string) $tokenId]);
         if (!$record) {
             return;
         }
@@ -53,9 +55,10 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
         $record->save(false);
     }
 
-    public function isRefreshTokenRevoked(string $tokenId): bool
+    /** @param string $tokenId */
+    public function isRefreshTokenRevoked($tokenId): bool
     {
-        $record = RefreshTokenRecord::findOne(['tokenId' => $tokenId]);
+        $record = RefreshTokenRecord::findOne(['tokenId' => (string) $tokenId]);
         if (!$record) {
             return true;
         }

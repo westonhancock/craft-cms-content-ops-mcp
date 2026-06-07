@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\tools\impl;
@@ -8,7 +9,10 @@ use westonhancock\editormcp\tools\Tool;
 
 class ListSectionsTool implements Tool
 {
-    public function name(): string { return 'list_sections'; }
+    public function name(): string
+    {
+        return 'list_sections';
+    }
 
     public function description(): string
     {

@@ -1,9 +1,9 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\services;
 
-use Craft;
 use DateTimeImmutable;
 use westonhancock\editormcp\Plugin;
 use westonhancock\editormcp\records\AuditEntryRecord;

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\controllers;
@@ -8,7 +9,6 @@ use craft\helpers\UrlHelper;
 use craft\web\Controller;
 use westonhancock\editormcp\Plugin;
 use westonhancock\editormcp\records\OAuthClientRecord;
-use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
 class ClientsController extends Controller

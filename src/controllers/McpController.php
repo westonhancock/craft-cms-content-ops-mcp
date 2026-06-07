@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\controllers;
@@ -10,8 +11,8 @@ use westonhancock\editormcp\Plugin;
 use westonhancock\editormcp\tools\ToolException;
 use westonhancock\editormcp\web\PsrBridge;
 use yii\web\BadRequestHttpException;
+use yii\web\HttpException;
 use yii\web\Response;
-use yii\web\ServiceUnavailableHttpException;
 use yii\web\UnauthorizedHttpException;
 
 /**
@@ -234,10 +235,10 @@ class McpController extends Controller
     {
         $settings = Plugin::$plugin->getSettings();
         if ($settings->killSwitch) {
-            throw new ServiceUnavailableHttpException('Editor MCP kill switch is active');
+            throw new HttpException(503, 'Editor MCP kill switch is active');
         }
         if (!$settings->enabled) {
-            throw new ServiceUnavailableHttpException('Editor MCP is disabled');
+            throw new HttpException(503, 'Editor MCP is disabled');
         }
         $req = Craft::$app->getRequest();
         if (!$req->getIsSecureConnection() && Craft::$app->env !== 'dev') {

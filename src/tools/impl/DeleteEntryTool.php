@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\tools\impl;
@@ -10,7 +11,10 @@ use westonhancock\editormcp\tools\ToolException;
 
 class DeleteEntryTool implements Tool
 {
-    public function name(): string { return 'delete_entry'; }
+    public function name(): string
+    {
+        return 'delete_entry';
+    }
 
     public function description(): string
     {

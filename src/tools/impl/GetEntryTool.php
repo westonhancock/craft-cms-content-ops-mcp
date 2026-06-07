@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\tools\impl;
@@ -10,7 +11,10 @@ use westonhancock\editormcp\tools\ToolException;
 
 class GetEntryTool implements Tool
 {
-    public function name(): string { return 'get_entry'; }
+    public function name(): string
+    {
+        return 'get_entry';
+    }
 
     public function description(): string
     {

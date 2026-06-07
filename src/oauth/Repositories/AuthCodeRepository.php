@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\oauth\Repositories;
@@ -38,9 +39,10 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
         $record->save(false);
     }
 
-    public function revokeAuthCode(string $codeId): void
+    /** @param string $codeId */
+    public function revokeAuthCode($codeId): void
     {
-        $record = AuthCodeRecord::findOne(['codeId' => $codeId]);
+        $record = AuthCodeRecord::findOne(['codeId' => (string) $codeId]);
         if (!$record) {
             return;
         }
@@ -48,9 +50,10 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface
         $record->save(false);
     }
 
-    public function isAuthCodeRevoked(string $codeId): bool
+    /** @param string $codeId */
+    public function isAuthCodeRevoked($codeId): bool
     {
-        $record = AuthCodeRecord::findOne(['codeId' => $codeId]);
+        $record = AuthCodeRecord::findOne(['codeId' => (string) $codeId]);
         return !$record || $record->consumedAt !== null;
     }
 }

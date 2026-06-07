@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\oauth\Repositories;
@@ -22,22 +23,29 @@ class ScopeRepository implements ScopeRepositoryInterface
         'assets:write' => 'Upload, replace, or delete assets.',
     ];
 
-    public function getScopeEntityByIdentifier(string $identifier): ?ScopeEntityInterface
+    /** @param string $identifier */
+    public function getScopeEntityByIdentifier($identifier): ?ScopeEntityInterface
     {
-        if (!array_key_exists($identifier, self::SCOPES)) {
+        if (!array_key_exists((string) $identifier, self::SCOPES)) {
             return null;
         }
         $scope = new ScopeEntity();
-        $scope->setIdentifier($identifier);
+        $scope->setIdentifier((string) $identifier);
         return $scope;
     }
 
+    /**
+     * @param ScopeEntityInterface[] $scopes
+     * @param string $grantType
+     * @param string|null $userIdentifier
+     * @param string|null $authCodeId
+     */
     public function finalizeScopes(
         array $scopes,
-        string $grantType,
+        $grantType,
         ClientEntityInterface $clientEntity,
-        ?string $userIdentifier = null,
-        ?string $authCodeId = null,
+        $userIdentifier = null,
+        $authCodeId = null,
     ): array {
         // Filter to scopes the client was registered for.
         $allowed = $clientEntity instanceof \westonhancock\editormcp\oauth\Entities\ClientEntity

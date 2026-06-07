@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\oauth\Repositories;
@@ -10,18 +11,24 @@ use westonhancock\editormcp\records\OAuthClientRecord;
 
 class ClientRepository implements ClientRepositoryInterface
 {
-    public function getClientEntity(string $clientIdentifier): ?ClientEntityInterface
+    /** @param string $clientIdentifier */
+    public function getClientEntity($clientIdentifier): ?ClientEntityInterface
     {
-        $record = OAuthClientRecord::findOne(['clientId' => $clientIdentifier]);
+        $record = OAuthClientRecord::findOne(['clientId' => (string) $clientIdentifier]);
         if (!$record || $record->revoked) {
             return null;
         }
         return $this->toEntity($record);
     }
 
-    public function validateClient(string $clientIdentifier, ?string $clientSecret, ?string $grantType): bool
+    /**
+     * @param string $clientIdentifier
+     * @param string|null $clientSecret
+     * @param string|null $grantType
+     */
+    public function validateClient($clientIdentifier, $clientSecret, $grantType): bool
     {
-        $record = OAuthClientRecord::findOne(['clientId' => $clientIdentifier]);
+        $record = OAuthClientRecord::findOne(['clientId' => (string) $clientIdentifier]);
         if (!$record || $record->revoked) {
             return false;
         }
@@ -32,7 +39,7 @@ class ClientRepository implements ClientRepositoryInterface
         if ($clientSecret === null) {
             return false;
         }
-        return password_verify($clientSecret, $record->secretHash);
+        return password_verify((string) $clientSecret, $record->secretHash);
     }
 
     private function toEntity(OAuthClientRecord $record): ClientEntity

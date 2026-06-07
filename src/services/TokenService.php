@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\services;
@@ -12,13 +13,12 @@ use League\OAuth2\Server\Grant\AuthCodeGrant;
 use League\OAuth2\Server\Grant\RefreshTokenGrant;
 use League\OAuth2\Server\ResourceServer;
 use Psr\Http\Message\ServerRequestInterface;
-use westonhancock\editormcp\Plugin;
 use westonhancock\editormcp\oauth\Repositories\AccessTokenRepository;
 use westonhancock\editormcp\oauth\Repositories\AuthCodeRepository;
 use westonhancock\editormcp\oauth\Repositories\ClientRepository;
 use westonhancock\editormcp\oauth\Repositories\RefreshTokenRepository;
 use westonhancock\editormcp\oauth\Repositories\ScopeRepository;
-use westonhancock\editormcp\oauth\Repositories\UserRepository;
+use westonhancock\editormcp\Plugin;
 use westonhancock\editormcp\records\AccessTokenRecord;
 use westonhancock\editormcp\records\RefreshTokenRecord;
 use yii\base\Component;

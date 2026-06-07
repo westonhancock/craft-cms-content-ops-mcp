@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\tools\impl;
@@ -10,7 +11,10 @@ use westonhancock\editormcp\tools\ToolException;
 
 class SetEntryStatusTool implements Tool
 {
-    public function name(): string { return 'set_entry_status'; }
+    public function name(): string
+    {
+        return 'set_entry_status';
+    }
 
     public function description(): string
     {
@@ -63,11 +67,7 @@ class SetEntryStatusTool implements Tool
 
         // If currently a draft, apply it.
         if ($entry->getIsDraft() && $status !== 'disabled') {
-            $applied = Craft::$app->getDrafts()->applyDraft($entry);
-            if (!$applied) {
-                throw new ToolException(-32016, 'Failed to apply draft', ['errors' => $entry->getErrors()]);
-            }
-            $entry = $applied;
+            $entry = Craft::$app->getDrafts()->applyDraft($entry);
         }
 
         if (!Craft::$app->getElements()->saveElement($entry)) {

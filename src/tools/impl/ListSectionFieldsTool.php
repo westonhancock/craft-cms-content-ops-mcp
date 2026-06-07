@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\tools\impl;
@@ -9,7 +10,10 @@ use westonhancock\editormcp\tools\ToolException;
 
 class ListSectionFieldsTool implements Tool
 {
-    public function name(): string { return 'list_section_fields'; }
+    public function name(): string
+    {
+        return 'list_section_fields';
+    }
 
     public function description(): string
     {
@@ -45,7 +49,7 @@ class ListSectionFieldsTool implements Tool
         $types = [];
         foreach ($section->getEntryTypes() as $type) {
             $fields = [];
-            foreach ($type->getFieldLayout()?->getCustomFields() ?? [] as $field) {
+            foreach ($type->getFieldLayout()->getCustomFields() as $field) {
                 $fields[] = [
                     'handle' => $field->handle,
                     'name' => $field->name,

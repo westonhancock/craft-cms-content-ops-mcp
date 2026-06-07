@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\services;
@@ -32,7 +33,7 @@ class ClientService extends Component
      * Register a new client. Returns the credentials needed by the client to
      * complete OAuth: client_id (always) + client_secret (only for confidential).
      *
-     * @param array{client_name?:string, redirect_uris:array, scope?:string, token_endpoint_auth_method?:string} $req
+     * @param array{client_name?:string, redirect_uris?:array, scope?:string, token_endpoint_auth_method?:string} $req
      */
     public function register(array $req, string $sourceIp): array
     {

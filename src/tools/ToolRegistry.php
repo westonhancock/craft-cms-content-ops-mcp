@@ -1,9 +1,9 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\tools;
 
-use Craft;
 use westonhancock\editormcp\Plugin;
 use westonhancock\editormcp\tools\impl\CreateEntryTool;
 use westonhancock\editormcp\tools\impl\DeleteEntryTool;

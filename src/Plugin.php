@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp;
@@ -7,12 +8,11 @@ use Craft;
 use craft\base\Model;
 use craft\base\Plugin as BasePlugin;
 use craft\elements\User;
-use craft\events\ModelEvent;
+use craft\events\RegisterCpNavItemsEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\UrlHelper;
-use craft\web\UrlManager;
 use craft\web\twig\variables\Cp;
-use craft\events\RegisterCpNavItemsEvent;
+use craft\web\UrlManager;
 use westonhancock\editormcp\events\UserLifecycleHandler;
 use westonhancock\editormcp\models\Settings;
 use westonhancock\editormcp\services\AuditService;
@@ -35,6 +35,7 @@ use yii\base\Event;
  * @property-read AuditService $audit
  * @property-read ClientService $clients
  * @property-read ToolRegistry $toolRegistry
+ * @method Settings getSettings()
  */
 class Plugin extends BasePlugin
 {
@@ -88,7 +89,7 @@ class Plugin extends BasePlugin
         Event::on(
             UrlManager::class,
             UrlManager::EVENT_REGISTER_SITE_URL_RULES,
-            function (RegisterUrlRulesEvent $event): void {
+            function(RegisterUrlRulesEvent $event): void {
                 $event->rules['GET .well-known/oauth-authorization-server'] = 'editor-mcp/o-auth/metadata';
                 $event->rules['GET .well-known/oauth-protected-resource'] = 'editor-mcp/o-auth/protected-resource-metadata';
                 $event->rules['POST oauth/register'] = 'editor-mcp/o-auth/register';
@@ -108,7 +109,7 @@ class Plugin extends BasePlugin
         Event::on(
             UrlManager::class,
             UrlManager::EVENT_REGISTER_CP_URL_RULES,
-            function (RegisterUrlRulesEvent $event): void {
+            function(RegisterUrlRulesEvent $event): void {
                 $event->rules['editor-mcp'] = 'editor-mcp/tokens/index';
                 $event->rules['editor-mcp/tokens'] = 'editor-mcp/tokens/index';
                 $event->rules['editor-mcp/tokens/<id:\d+>'] = 'editor-mcp/tokens/view';
@@ -117,7 +118,7 @@ class Plugin extends BasePlugin
                 $event->rules['editor-mcp/settings'] = 'editor-mcp/settings/index';
                 $event->rules['editor-mcp/clients'] = 'editor-mcp/clients/index';
                 $event->rules['editor-mcp/clients/<id:\d+>'] = 'editor-mcp/clients/view';
-                // Settings → plugins listing also routes here via settingsHtml
+            // Settings → plugins listing also routes here via settingsHtml
             },
         );
     }
@@ -141,7 +142,7 @@ class Plugin extends BasePlugin
         Event::on(
             Cp::class,
             Cp::EVENT_REGISTER_CP_NAV_ITEMS,
-            function (RegisterCpNavItemsEvent $event): void {
+            function(RegisterCpNavItemsEvent $event): void {
                 if (!Craft::$app->getUser()->checkPermission('accessPlugin-editor-mcp')) {
                     return;
                 }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\tools\impl;
@@ -13,7 +14,10 @@ use westonhancock\editormcp\tools\ToolException;
 
 class UploadAssetTool implements Tool
 {
-    public function name(): string { return 'upload_asset'; }
+    public function name(): string
+    {
+        return 'upload_asset';
+    }
 
     public function description(): string
     {

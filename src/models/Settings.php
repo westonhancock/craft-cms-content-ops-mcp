@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\models;
@@ -70,7 +71,7 @@ class Settings extends Model
         return [
             [['enabled', 'dcrRequireApproval', 'auditVerbose', 'killSwitch'], 'boolean'],
             [['accessTokenTtl', 'refreshTokenTtl', 'authCodeTtl', 'dcrPerIpPerDay',
-              'rateLimitPerUserPerMinute', 'assetUploadMaxBytes'], 'integer', 'min' => 1],
+              'rateLimitPerUserPerMinute', 'assetUploadMaxBytes', ], 'integer', 'min' => 1],
             [['accessTokenTtl'], 'integer', 'max' => 3600],
             [['auditRetentionDays'], 'integer', 'min' => 1, 'skipOnEmpty' => true],
             [['securityWebhookUrl'], 'url', 'skipOnEmpty' => true],

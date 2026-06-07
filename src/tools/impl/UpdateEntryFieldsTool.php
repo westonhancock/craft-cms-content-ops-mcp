@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\tools\impl;
@@ -10,7 +11,10 @@ use westonhancock\editormcp\tools\ToolException;
 
 class UpdateEntryFieldsTool implements Tool
 {
-    public function name(): string { return 'update_entry_fields'; }
+    public function name(): string
+    {
+        return 'update_entry_fields';
+    }
 
     public function description(): string
     {

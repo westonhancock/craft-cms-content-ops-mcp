@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\controllers;
@@ -8,13 +9,12 @@ use craft\helpers\UrlHelper;
 use craft\web\Controller;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use Nyholm\Psr7\Response as PsrResponse;
-use westonhancock\editormcp\Plugin;
-use westonhancock\editormcp\oauth\Entities\UserEntity;
 use westonhancock\editormcp\oauth\Repositories\ScopeRepository;
+use westonhancock\editormcp\Plugin;
 use westonhancock\editormcp\web\PsrBridge;
 use yii\web\BadRequestHttpException;
+use yii\web\HttpException;
 use yii\web\Response;
-use yii\web\ServiceUnavailableHttpException;
 
 /**
  * OAuth 2.1 endpoints.
@@ -192,13 +192,13 @@ class OAuthController extends Controller
     {
         $settings = Plugin::$plugin->getSettings();
         if ($settings->killSwitch) {
-            throw new ServiceUnavailableHttpException('Editor MCP kill switch is active');
+            throw new HttpException(503, 'Editor MCP kill switch is active');
         }
         if (!$settings->enabled) {
-            throw new ServiceUnavailableHttpException('Editor MCP is disabled');
+            throw new HttpException(503, 'Editor MCP is disabled');
         }
         $req = Craft::$app->getRequest();
-        if (!$req->getIsSecureConnection() && Craft::$app->env !== 'dev' && !$req->getHostName() === 'localhost') {
+        if (!$req->getIsSecureConnection() && Craft::$app->env !== 'dev' && $req->getHostName() !== 'localhost') {
             throw new BadRequestHttpException('HTTPS required');
         }
     }

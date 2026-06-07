@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace westonhancock\editormcp\tools\impl;
@@ -9,7 +10,10 @@ use westonhancock\editormcp\tools\Tool;
 
 class WhoAmITool implements Tool
 {
-    public function name(): string { return 'who_am_i'; }
+    public function name(): string
+    {
+        return 'who_am_i';
+    }
 
     public function description(): string
     {
