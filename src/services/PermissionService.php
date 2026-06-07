@@ -47,7 +47,12 @@ class PermissionService extends Component
 
     public function requiredScope(string $tool): ?string
     {
-        return self::TOOL_SCOPES[$tool] ?? throw new \InvalidArgumentException("Unknown tool: $tool");
+        // array_key_exists, not ??, because the map stores null for tools that
+        // don't require a scope (e.g. who_am_i) — ?? would fall through on null.
+        if (!array_key_exists($tool, self::TOOL_SCOPES)) {
+            throw new \InvalidArgumentException("Unknown tool: $tool");
+        }
+        return self::TOOL_SCOPES[$tool];
     }
 
     public function hasScope(array $grantedScopes, string $tool): bool

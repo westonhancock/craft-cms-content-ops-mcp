@@ -1,6 +1,8 @@
 {% extends "_layouts/cp" %}
 {% set title = "Authorize MCP access" %}
-{% set fullPageForm = true %}
+{# Intentionally no fullPageForm — Allow/Deny are submit buttons of the inner
+   form below, posting to /oauth/consent. A fullPageForm would wrap this in
+   an outer CP form and the nested form would be silently dropped. #}
 
 {# CSP: frame-ancestors none stops embedded-iframe consent attacks #}
 {% set noindex = true %}

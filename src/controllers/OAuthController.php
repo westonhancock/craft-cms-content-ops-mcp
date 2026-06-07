@@ -7,6 +7,7 @@ namespace westonhancock\editormcp\controllers;
 use Craft;
 use craft\helpers\UrlHelper;
 use craft\web\Controller;
+use craft\web\View;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use Nyholm\Psr7\Response as PsrResponse;
 use westonhancock\editormcp\oauth\Repositories\ScopeRepository;
@@ -141,15 +142,17 @@ class OAuthController extends Controller
 
         $userComponent = Craft::$app->getUser();
         $craftUser = $userComponent->getIdentity();
-        $loggedInRecently = $craftUser
-            && ($needsFreshLogin
-                ? $this->loggedInWithinSeconds(120)
-                : true);
+        // For high-stakes scopes (publish/delete) or prompt=login, require an
+        // elevated session — Craft's native concept of "freshly re-authed".
+        // Its duration is the site's $elevatedSessionDuration (default 5 min).
+        $sessionFreshEnough = !$needsFreshLogin || $userComponent->getHasElevatedSession();
 
-        if (!$craftUser || ($needsFreshLogin && !$loggedInRecently)) {
-            // Send to login. After login, Craft returns to the URL we set.
+        if (!$craftUser || !$sessionFreshEnough) {
+            // Send to the CP login page — the only place editor identity lives
+            // (and where 2FA challenges run). After login, Craft uses the
+            // return URL we set to bring the user back to /oauth/authorize.
             $userComponent->setReturnUrl(Craft::$app->getRequest()->getAbsoluteUrl());
-            return $this->redirect(UrlHelper::siteUrl(
+            return $this->redirect(UrlHelper::cpUrl(
                 Craft::$app->getConfig()->getGeneral()->getLoginPath(),
             ));
         }
@@ -164,17 +167,24 @@ class OAuthController extends Controller
             'createdAt' => time(),
         ]);
 
-        // Render consent.
-        return $this->renderTemplate('editor-mcp/oauth/consent', [
-            'authRequest' => $authRequest,
-            'scopes' => $scopes,
-            'scopeDescriptions' => ScopeRepository::SCOPES,
-            'clientName' => $this->resolveClientDisplayName($authRequest),
-            'stateKey' => $stateKey,
-            'redirectUri' => $authRequest->getRedirectUri() ?? '',
-            'user' => $craftUser,
-            'highStakes' => $highStakes,
-        ]);
+        // Render consent in CP template mode so the `_layouts/cp` extend in
+        // the template resolves. The user is already authenticated against the
+        // CP, so showing them the consent screen with CP chrome is the
+        // intended UX.
+        return $this->renderTemplate(
+            'editor-mcp/oauth/consent',
+            [
+                'authRequest' => $authRequest,
+                'scopes' => $scopes,
+                'scopeDescriptions' => ScopeRepository::SCOPES,
+                'clientName' => $this->resolveClientDisplayName($authRequest),
+                'stateKey' => $stateKey,
+                'redirectUri' => $authRequest->getRedirectUri() ?? '',
+                'user' => $craftUser,
+                'highStakes' => $highStakes,
+            ],
+            View::TEMPLATE_MODE_CP,
+        );
     }
 
     public function actionRevoke(): Response
@@ -215,12 +225,4 @@ class OAuthController extends Controller
         return $client->getIdentifier();
     }
 
-    private function loggedInWithinSeconds(int $seconds): bool
-    {
-        $session = Craft::$app->getSession();
-        $authTimestamp = $session->get('user.authTimestamp')
-            ?? $session->get('__elevated.userAuthenticationTimestamp')
-            ?? null;
-        return $authTimestamp !== null && (time() - (int) $authTimestamp) <= $seconds;
-    }
 }

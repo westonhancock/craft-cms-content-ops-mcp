@@ -9,10 +9,12 @@ use craft\base\Model;
 use craft\base\Plugin as BasePlugin;
 use craft\elements\User;
 use craft\events\RegisterCpNavItemsEvent;
+use craft\events\RegisterTemplateRootsEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\UrlHelper;
 use craft\web\twig\variables\Cp;
 use craft\web\UrlManager;
+use craft\web\View;
 use westonhancock\editormcp\events\UserLifecycleHandler;
 use westonhancock\editormcp\models\Settings;
 use westonhancock\editormcp\services\AuditService;
@@ -62,6 +64,24 @@ class Plugin extends BasePlugin
         $this->registerRoutes();
         $this->registerUserLifecycleEvents();
         $this->registerCpNav();
+        $this->registerSiteTemplateRoots();
+    }
+
+    /**
+     * Map the `editor-mcp` namespace to the plugin's templates/ dir.
+     *
+     * Both modes register: CP-mode covers the consent screen (renders with
+     * Craft CP chrome via `_layouts/cp`) and the CP settings/tokens/etc.
+     * Site-mode covers the unauthenticated OAuth metadata endpoints if they
+     * ever need a template.
+     */
+    private function registerSiteTemplateRoots(): void
+    {
+        $register = function(RegisterTemplateRootsEvent $event): void {
+            $event->roots['editor-mcp'] = __DIR__ . '/../templates';
+        };
+        Event::on(View::class, View::EVENT_REGISTER_SITE_TEMPLATE_ROOTS, $register);
+        Event::on(View::class, View::EVENT_REGISTER_CP_TEMPLATE_ROOTS, $register);
     }
 
     protected function createSettingsModel(): ?Model
