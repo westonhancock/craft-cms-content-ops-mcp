@@ -39,6 +39,9 @@ class OAuthController extends Controller
         'register' => self::ALLOW_ANONYMOUS_LIVE | self::ALLOW_ANONYMOUS_OFFLINE,
         'token' => self::ALLOW_ANONYMOUS_LIVE | self::ALLOW_ANONYMOUS_OFFLINE,
         'revoke' => self::ALLOW_ANONYMOUS_LIVE | self::ALLOW_ANONYMOUS_OFFLINE,
+        // authorize must be reachable anonymously — actionAuthorize() redirects
+        // unauthenticated callers to Craft's login flow with a return URL.
+        'authorize' => self::ALLOW_ANONYMOUS_LIVE | self::ALLOW_ANONYMOUS_OFFLINE,
     ];
 
     public function beforeAction($action): bool
