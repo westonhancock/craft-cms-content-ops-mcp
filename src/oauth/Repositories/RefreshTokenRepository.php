@@ -43,16 +43,47 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
         $record->save(false);
     }
 
-    /** @param string $tokenId */
+    /**
+     * Called by League's RefreshTokenGrant after a successful rotation.
+     * Marks the token "consumed" but deliberately leaves revokedAt null so a
+     * subsequent replay of the same token can be detected as theft (see
+     * isRefreshTokenRevoked below). For explicit revocation paths (the
+     * /oauth/revoke endpoint, kill switch, admin action) use forceRevoke().
+     *
+     * @param string $tokenId
+     */
     public function revokeRefreshToken($tokenId): void
     {
         $record = RefreshTokenRecord::findOne(['tokenId' => (string) $tokenId]);
         if (!$record) {
             return;
         }
-        $record->revokedAt = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
-        $record->consumedAt = $record->consumedAt ?? $record->revokedAt;
+        $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
+        $record->consumedAt = $record->consumedAt ?? $now;
         $record->save(false);
+    }
+
+    /**
+     * Forcibly revoke a refresh token (and any access token paired with it).
+     * For the explicit revoke endpoint or admin actions where the intent is
+     * "this token is dead", not "this token was consumed by legitimate rotation".
+     */
+    public function forceRevoke(string $tokenId): void
+    {
+        $record = RefreshTokenRecord::findOne(['tokenId' => $tokenId]);
+        if (!$record) {
+            return;
+        }
+        $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
+        $record->revokedAt = $now;
+        $record->consumedAt = $record->consumedAt ?? $now;
+        $record->save(false);
+        if ($record->accessTokenId) {
+            AccessTokenRecord::updateAll(
+                ['revokedAt' => $now],
+                ['id' => $record->accessTokenId, 'revokedAt' => null],
+            );
+        }
     }
 
     /** @param string $tokenId */

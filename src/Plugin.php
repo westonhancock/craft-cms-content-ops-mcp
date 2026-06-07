@@ -117,6 +117,7 @@ class Plugin extends BasePlugin
                 $event->rules['GET oauth/authorize'] = 'editor-mcp/o-auth/authorize';
                 $event->rules['POST oauth/authorize'] = 'editor-mcp/o-auth/authorize';
                 $event->rules['POST oauth/consent'] = 'editor-mcp/consent/decide';
+                $event->rules['POST oauth/elevate'] = 'editor-mcp/o-auth/elevate';
                 $event->rules['POST oauth/revoke'] = 'editor-mcp/o-auth/revoke';
                 // MCP transport
                 $event->rules['POST mcp'] = 'editor-mcp/mcp/server';

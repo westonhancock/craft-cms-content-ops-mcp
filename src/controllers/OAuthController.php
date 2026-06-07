@@ -43,6 +43,8 @@ class OAuthController extends Controller
         // authorize must be reachable anonymously — actionAuthorize() redirects
         // unauthenticated callers to Craft's login flow with a return URL.
         'authorize' => self::ALLOW_ANONYMOUS_LIVE | self::ALLOW_ANONYMOUS_OFFLINE,
+        // elevate checks session inside and rejects unauthenticated callers.
+        'elevate' => self::ALLOW_ANONYMOUS_LIVE | self::ALLOW_ANONYMOUS_OFFLINE,
     ];
 
     public function beforeAction($action): bool
@@ -147,7 +149,7 @@ class OAuthController extends Controller
         // Its duration is the site's $elevatedSessionDuration (default 5 min).
         $sessionFreshEnough = !$needsFreshLogin || $userComponent->getHasElevatedSession();
 
-        if (!$craftUser || !$sessionFreshEnough) {
+        if (!$craftUser) {
             // Send to the CP login page — the only place editor identity lives
             // (and where 2FA challenges run). After login, Craft uses the
             // return URL we set to bring the user back to /oauth/authorize.
@@ -155,6 +157,25 @@ class OAuthController extends Controller
             return $this->redirect(UrlHelper::cpUrl(
                 Craft::$app->getConfig()->getGeneral()->getLoginPath(),
             ));
+        }
+
+        if (!$sessionFreshEnough) {
+            // User IS logged in, but their elevated session has expired (or
+            // never elevated since this request requires it). Redirecting to
+            // /admin/login would loop — they're already authenticated, so the
+            // CP would just bounce them to the dashboard. Render an in-band
+            // password re-confirmation prompt instead. This matches OAuth 2.1
+            // `prompt=login` semantics and reuses Craft's startElevatedSession.
+            return $this->renderTemplate(
+                'editor-mcp/oauth/elevate',
+                [
+                    'continuationUrl' => Craft::$app->getRequest()->getAbsoluteUrl(),
+                    'highStakes' => $highStakes,
+                    'user' => $craftUser,
+                    'error' => Craft::$app->getSession()->getFlash('mcpElevateError'),
+                ],
+                View::TEMPLATE_MODE_CP,
+            );
         }
 
         // Stash the validated AuthorizationRequest in the session so the
@@ -197,8 +218,50 @@ class OAuthController extends Controller
         $accessRepo = new \westonhancock\editormcp\oauth\Repositories\AccessTokenRepository();
         $refreshRepo = new \westonhancock\editormcp\oauth\Repositories\RefreshTokenRepository();
         $accessRepo->revokeAccessToken($token);
-        $refreshRepo->revokeRefreshToken($token);
+        $refreshRepo->forceRevoke($token);
         return $this->asJson(['revoked' => true]);
+    }
+
+    /**
+     * Handles the password re-confirmation form shown when high-stakes scopes
+     * are requested but the user's elevated session has expired. On success,
+     * redirects back to the originally-requested /oauth/authorize URL so the
+     * normal flow can resume with consent.
+     */
+    public function actionElevate(): Response
+    {
+        $this->requirePostRequest();
+        /** @var \craft\web\User $user */
+        $user = Craft::$app->getUser();
+        $identity = $user->getIdentity();
+        if (!$identity) {
+            // Misuse — elevation only makes sense for an already-logged-in user.
+            throw new BadRequestHttpException('Not authenticated');
+        }
+        $password = (string) Craft::$app->getRequest()->getRequiredBodyParam('password');
+        $continuationUrl = (string) Craft::$app->getRequest()->getRequiredBodyParam('continuationUrl');
+
+        // Open-redirect guard: only allow continuation to our own authorize endpoint.
+        $authorizeBase = UrlHelper::siteUrl('oauth/authorize');
+        if (!str_starts_with($continuationUrl, $authorizeBase)) {
+            throw new BadRequestHttpException('Invalid continuation URL');
+        }
+
+        $valid = $identity->password !== null
+            && Craft::$app->getSecurity()->validatePassword($password, $identity->password);
+        if (!$valid) {
+            Craft::$app->getSession()->setFlash('mcpElevateError', 'Incorrect password. Please try again.');
+            return $this->redirect($continuationUrl);
+        }
+
+        // Mirror what Craft's login() does to set the elevated session — there
+        // is no public API, but the session key and computation are stable.
+        $duration = Craft::$app->getConfig()->getGeneral()->elevatedSessionDuration;
+        if ($duration > 0) {
+            Craft::$app->getSession()->set($user->elevatedSessionTimeoutParam, time() + $duration);
+        }
+
+        return $this->redirect($continuationUrl);
     }
 
     private function guard(): void
