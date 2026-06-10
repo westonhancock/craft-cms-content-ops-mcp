@@ -44,7 +44,8 @@ class SetEntryStatusTool implements Tool
         }
 
         /** @var Entry|null $entry */
-        $entry = Entry::find()->id($id)->status(null)->one();
+        // drafts(null) so by-id lookups match both drafts and canonical entries.
+        $entry = Entry::find()->id($id)->status(null)->drafts(null)->one();
         if (!$entry) {
             throw new ToolException(-32008, "Entry not found: $id");
         }

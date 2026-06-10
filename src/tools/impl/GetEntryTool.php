@@ -40,7 +40,8 @@ class GetEntryTool implements Tool
         if ($id <= 0) {
             throw new ToolException(-32602, 'id is required');
         }
-        $query = Entry::find()->id($id)->status(null);
+        // drafts(null) so by-id lookups match both drafts and canonical entries.
+        $query = Entry::find()->id($id)->status(null)->drafts(null);
         if (isset($args['siteId'])) {
             $query->siteId((int) $args['siteId']);
         }

@@ -47,7 +47,8 @@ class UpdateEntryFieldsTool implements Tool
             throw new ToolException(-32602, 'Pass at least one of fields, title, slug');
         }
 
-        $query = Entry::find()->id($id)->status(null);
+        // drafts(null) so by-id lookups match both drafts and canonical entries.
+        $query = Entry::find()->id($id)->status(null)->drafts(null);
         if (isset($args['siteId'])) {
             $query->siteId((int) $args['siteId']);
         }

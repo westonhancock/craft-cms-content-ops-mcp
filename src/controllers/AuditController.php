@@ -29,7 +29,7 @@ class AuditController extends Controller
                 'a.userId', 'u.username',
             ])
             ->from(['a' => '{{%editormcp_audit_entries}}'])
-            ->leftJoin(['u' => '{{%users}}'], 'u.id = a.userId')
+            ->leftJoin(['u' => '{{%users}}'], '[[u.id]] = [[a.userId]]')
             ->orderBy('a.dateCreated DESC')
             ->limit(200);
 

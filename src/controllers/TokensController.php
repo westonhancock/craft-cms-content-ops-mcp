@@ -27,8 +27,8 @@ class TokensController extends Controller
                 'u.username',
             ])
             ->from(['t' => '{{%editormcp_access_tokens}}'])
-            ->innerJoin(['c' => '{{%editormcp_clients}}'], 'c.id = t.clientId')
-            ->leftJoin(['u' => '{{%users}}'], 'u.id = t.userId')
+            ->innerJoin(['c' => '{{%editormcp_clients}}'], '[[c.id]] = [[t.clientId]]')
+            ->leftJoin(['u' => '{{%users}}'], '[[u.id]] = [[t.userId]]')
             ->orderBy('t.dateCreated DESC')
             ->limit(500)
             ->all();
