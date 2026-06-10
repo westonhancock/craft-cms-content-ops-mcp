@@ -82,9 +82,8 @@ class ClientService extends Component
         $record->isPublic = $isPublic;
         $record->save(false);
 
-        return [
+        $response = [
             'client_id' => $clientId,
-            'client_secret' => $secret,
             'client_name' => $record->name,
             'redirect_uris' => $redirectUris,
             'grant_types' => ['authorization_code', 'refresh_token'],
@@ -93,6 +92,14 @@ class ClientService extends Component
             'scope' => implode(' ', $valid),
             'approved' => (bool) $record->approved,
         ];
+        // RFC 7591 §3.2.1: omit client_secret entirely for public clients — a
+        // null value fails strict clients (the MCP TS SDK rejects non-string).
+        if ($secret !== null) {
+            $response['client_secret'] = $secret;
+            $response['client_secret_expires_at'] = 0;
+        }
+
+        return $response;
     }
 
     private function validateRedirectUri(string $uri): void
