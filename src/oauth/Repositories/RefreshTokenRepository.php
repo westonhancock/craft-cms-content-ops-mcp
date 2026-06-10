@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use League\OAuth2\Server\Entities\RefreshTokenEntityInterface;
 use League\OAuth2\Server\Repositories\RefreshTokenRepositoryInterface;
 use westonhancock\editormcp\oauth\Entities\RefreshTokenEntity;
+use westonhancock\editormcp\Plugin;
 use westonhancock\editormcp\records\AccessTokenRecord;
 use westonhancock\editormcp\records\RefreshTokenRecord;
 
@@ -20,6 +21,16 @@ use westonhancock\editormcp\records\RefreshTokenRecord;
  */
 class RefreshTokenRepository implements RefreshTokenRepositoryInterface
 {
+    /**
+     * Record id of the refresh token consumed by the current rotation, if any.
+     * League's RefreshTokenGrant calls revokeRefreshToken(old) *before*
+     * persistNewRefreshToken(new) within the same request, so capturing it
+     * here lets us link new → old via parentId. Without that link,
+     * revokeChain() has no chain to walk and theft detection would only kill
+     * the replayed token, not its rotated descendants.
+     */
+    private static ?int $consumedRecordId = null;
+
     public function getNewRefreshToken(): ?RefreshTokenEntityInterface
     {
         return new RefreshTokenEntity();
@@ -40,6 +51,8 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
         $record->scopes = json_encode(array_map(static fn($s) => $s->getIdentifier(),
             $accessToken->getScopes()));
         $record->expiresAt = $refreshTokenEntity->getExpiryDateTime()->format('Y-m-d H:i:s');
+        $record->parentId = self::$consumedRecordId;
+        self::$consumedRecordId = null;
         $record->save(false);
     }
 
@@ -61,6 +74,7 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
         $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
         $record->consumedAt = $record->consumedAt ?? $now;
         $record->save(false);
+        self::$consumedRecordId = (int) $record->id;
     }
 
     /**
@@ -96,6 +110,17 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
         // Theft detection: if a consumed token is presented, revoke the whole chain.
         if ($record->consumedAt !== null && $record->revokedAt === null) {
             $this->revokeChain($record);
+            Plugin::$plugin->security->notify('refresh_token_theft_detected', [
+                'userId' => (int) $record->userId,
+                'clientId' => (int) $record->clientId,
+            ]);
+            Plugin::$plugin->audit->log([
+                'userId' => (int) $record->userId,
+                'clientId' => (int) $record->clientId,
+                'status' => 'denied',
+                'errorCode' => 'refresh_token_theft',
+                'errorMessage' => 'Consumed refresh token replayed — token chain revoked',
+            ]);
             return true;
         }
         return $record->revokedAt !== null;

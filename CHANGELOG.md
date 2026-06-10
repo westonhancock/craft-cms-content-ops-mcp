@@ -2,6 +2,40 @@
 
 ## Unreleased
 
+### Completion pass (2026-06-10)
+
+Closed every gap left open by the previous validation pass. All previously
+untested paths are now exercised end-to-end against the real Craft 5.9 /
+Postgres install (36 scripted checks, all passing), and three settings that
+existed in the UI but were never enforced are now wired up.
+
+#### Security
+
+- **Refresh-token chain revocation was a no-op**: `parentId` was never set when persisting rotated refresh tokens, so theft detection only revoked the *replayed* token — the attacker's freshly-rotated descendant tokens survived. League calls `revokeRefreshToken(old)` before `persistNewRefreshToken(new)` in the same request, so the repository now captures the consumed token's record id and links the new token to it. Verified: replaying a consumed token now kills the entire chain, including the rotated child.
+- **`/oauth/revoke` now implements RFC 7009 correctly**: it previously looked tokens up by JTI / refresh-token id, but clients send the *raw* token. Access tokens are parsed as JWTs (signature verified against our public key, revoked by `jti`); refresh tokens are decrypted (Defuse, server encryption key) and revoked by `refresh_token_id` — which also kills the paired access token. Unknown tokens still return 200 per the spec.
+- **Security event webhook actually fires now** (`Settings::$securityWebhookUrl` was a dead setting). New `SecurityEventService` posts Slack-compatible JSON on: `refresh_token_theft_detected`, `dcr_rate_limited`, `rate_limit_anomaly`, `user_tokens_revoked` (suspend/lock/pending/delete), and `kill_switch_activated`. Delivery is best-effort — failures log, never break the triggering request. Theft detection also writes an audit row now.
+- **Per-user MCP rate limiting enforced** (`rateLimitPerUserPerMinute` was a dead setting). Fixed one-minute windows in the app cache; 429 over the limit; a user rejected 5+ times in an hour fires a `rate_limit_anomaly` security event once per hour.
+- **IP allowlist enforced** (`ipAllowlist` was a dead setting). CIDR-matched against the MCP transport endpoint; browser-facing OAuth pages deliberately stay reachable so humans can still consent.
+
+#### Reliability
+
+- **Audit retention pruning never ran** — `AuditService::prune()` existed but had no caller. Now hooked into Craft's garbage-collection cycle (`Gc::EVENT_RUN`).
+
+#### Verified end-to-end (previously untested)
+
+- `delete_entry` — soft-deletes drafts and canonical entries; deleted entries no longer fetchable.
+- `upload_asset` — base64 round-trip into a Local volume, `get_asset` URL back; MIME-spoof (shell script named `.png`) rejected by server-side detection.
+- In-band elevation flow — expired elevated session + high-stakes scope renders the password page; wrong password re-prompts; open-redirect guard rejects foreign continuation URLs; correct password resumes straight into consent → code → token.
+- RFC 7009 revoke for both raw token types, including paired-access-token death.
+- Rate limit: under-limit requests pass, 429 inside the window, stays limited.
+- IP allowlist 403, theft-detection webhook delivery.
+
+#### Packaging
+
+- `LICENSE.md` (MIT) added — composer.json already declared MIT but the file was missing (required for Plugin Store submission).
+
+### Production-readiness pass (2026-06-07)
+
 End-to-end validation pass against a real Craft 5.9 install on Postgres.
 Found and fixed thirteen distinct bugs across the OAuth flow, MCP transport,
 audit log, CP UI, and tooling. Plugin now works for the documented v1

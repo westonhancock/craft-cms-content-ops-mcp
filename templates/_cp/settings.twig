@@ -136,7 +136,7 @@
 
     {{ forms.textareaField({
         label: "IP allowlist (CIDR)",
-        instructions: "Optional. One CIDR per line. Empty = no restriction.",
+        instructions: "Optional. One CIDR per line. Empty = no restriction. Applies to the MCP transport endpoint only — OAuth/consent pages stay reachable for humans.",
         name: "settings[ipAllowlist]",
         value: settings.ipAllowlist|join("\n"),
         rows: 3,

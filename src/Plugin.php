@@ -21,6 +21,7 @@ use westonhancock\editormcp\services\AuditService;
 use westonhancock\editormcp\services\ClientService;
 use westonhancock\editormcp\services\ImpersonationService;
 use westonhancock\editormcp\services\PermissionService;
+use westonhancock\editormcp\services\SecurityEventService;
 use westonhancock\editormcp\services\TokenService;
 use westonhancock\editormcp\tools\ToolRegistry;
 use yii\base\Event;
@@ -36,6 +37,7 @@ use yii\base\Event;
  * @property-read ImpersonationService $impersonation
  * @property-read AuditService $audit
  * @property-read ClientService $clients
+ * @property-read SecurityEventService $security
  * @property-read ToolRegistry $toolRegistry
  * @method Settings getSettings()
  */
@@ -59,12 +61,29 @@ class Plugin extends BasePlugin
             'audit' => AuditService::class,
             'clients' => ClientService::class,
             'toolRegistry' => ToolRegistry::class,
+            'security' => SecurityEventService::class,
         ]);
 
         $this->registerRoutes();
         $this->registerUserLifecycleEvents();
         $this->registerCpNav();
         $this->registerSiteTemplateRoots();
+        $this->registerGc();
+    }
+
+    /**
+     * Audit retention runs on Craft's garbage-collection cycle (after ~1/100k
+     * requests, or `./craft gc`) so old rows age out without needing a cron.
+     */
+    private function registerGc(): void
+    {
+        Event::on(
+            \craft\services\Gc::class,
+            \craft\services\Gc::EVENT_RUN,
+            function(): void {
+                $this->audit->prune();
+            },
+        );
     }
 
     /**

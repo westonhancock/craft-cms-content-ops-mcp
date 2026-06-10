@@ -40,6 +40,7 @@ class ClientService extends Component
         $settings = Plugin::$plugin->getSettings();
 
         if ($this->dailyRegistrationsFromIp($sourceIp) >= $settings->dcrPerIpPerDay) {
+            Plugin::$plugin->security->notify('dcr_rate_limited', ['ip' => $sourceIp]);
             throw new \RuntimeException('DCR rate limit exceeded for this IP');
         }
 
