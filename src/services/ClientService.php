@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace westonhancock\editormcp\services;
 
 use Craft;
+use craft\helpers\StringHelper;
 use DateTimeImmutable;
-use Ramsey\Uuid\Uuid;
 use westonhancock\editormcp\Plugin;
 use westonhancock\editormcp\records\OAuthClientRecord;
 use yii\base\Component;
@@ -40,6 +40,7 @@ class ClientService extends Component
         $settings = Plugin::$plugin->getSettings();
 
         if ($this->dailyRegistrationsFromIp($sourceIp) >= $settings->dcrPerIpPerDay) {
+            Plugin::$plugin->security->notify('dcr_rate_limited', ['ip' => $sourceIp]);
             throw new \RuntimeException('DCR rate limit exceeded for this IP');
         }
 
@@ -62,7 +63,7 @@ class ClientService extends Component
             throw new \InvalidArgumentException('Unknown scope requested');
         }
 
-        $clientId = 'cli_' . Uuid::uuid4()->toString();
+        $clientId = 'cli_' . StringHelper::UUID();
         $secret = null;
         $secretHash = null;
         if (!$isPublic) {

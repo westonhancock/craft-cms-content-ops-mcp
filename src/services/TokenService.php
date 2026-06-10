@@ -7,6 +7,14 @@ namespace westonhancock\editormcp\services;
 use Craft;
 use DateInterval;
 use DateTimeImmutable;
+use Defuse\Crypto\Crypto;
+use Lcobucci\JWT\Encoding\JoseEncoder;
+use Lcobucci\JWT\Signer\Key\InMemory;
+use Lcobucci\JWT\Signer\Rsa\Sha256;
+use Lcobucci\JWT\Token\Parser as JwtParser;
+use Lcobucci\JWT\UnencryptedToken;
+use Lcobucci\JWT\Validation\Constraint\SignedWith;
+use Lcobucci\JWT\Validation\Validator;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\CryptKey;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
@@ -101,6 +109,54 @@ class TokenService extends Component
         );
 
         return compact('userId', 'clientId', 'scopes', 'tokenId');
+    }
+
+    /**
+     * Revokes a token presented in its *raw* over-the-wire form, per RFC 7009.
+     *
+     * Access tokens are RS256 JWTs — we verify the signature against our own
+     * public key, then revoke by the `jti` claim. Refresh tokens are
+     * Defuse-encrypted JSON payloads (league/oauth2-server's CryptTrait) —
+     * we decrypt with the server encryption key and revoke by
+     * `refresh_token_id`, which also kills the paired access token.
+     *
+     * Returns true if a known token was revoked. Unknown/garbage tokens
+     * return false — RFC 7009 §2.2 requires the endpoint to respond 200
+     * regardless, so callers should not turn false into an error.
+     */
+    public function revokeRawToken(string $token): bool
+    {
+        // Access token path: parse as JWT, verify it's ours, revoke by jti.
+        try {
+            $parsed = (new JwtParser(new JoseEncoder()))->parse($token);
+            $signedByUs = (new Validator())->validate(
+                $parsed,
+                new SignedWith(new Sha256(), InMemory::file($this->keyPath('public.key'))),
+            );
+            if ($signedByUs && $parsed instanceof UnencryptedToken) {
+                $jti = $parsed->claims()->get('jti');
+                if (is_string($jti) && $jti !== '') {
+                    (new AccessTokenRepository())->revokeAccessToken($jti);
+                    return true;
+                }
+            }
+        } catch (\Throwable) {
+            // Not a JWT — fall through to the refresh-token path.
+        }
+
+        // Refresh token path: decrypt the payload for its refresh_token_id.
+        try {
+            $json = Crypto::decryptWithPassword($token, $this->encryptionKey());
+            $data = json_decode($json, true);
+            $id = is_array($data) ? ($data['refresh_token_id'] ?? null) : null;
+            if (is_string($id) && $id !== '') {
+                (new RefreshTokenRepository())->forceRevoke($id);
+                return true;
+            }
+        } catch (\Throwable) {
+            // Unknown token. RFC 7009 says the endpoint still responds 200.
+        }
+        return false;
     }
 
     public function revokeAllForUser(int $userId): void

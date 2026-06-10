@@ -79,6 +79,9 @@ class SettingsController extends Controller
         Craft::$app->getPlugins()->savePluginSettings($plugin, $settings->toArray());
         if ($settings->killSwitch) {
             $plugin->tokens->revokeAll();
+            $plugin->security->notify('kill_switch_activated', [
+                'by' => Craft::$app->getUser()->getIdentity()?->username,
+            ]);
             Craft::$app->getSession()->setNotice('Kill switch ON. All tokens revoked, endpoints returning 503.');
         } else {
             Craft::$app->getSession()->setNotice('Kill switch OFF. Endpoints back online.');

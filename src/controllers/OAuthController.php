@@ -214,11 +214,11 @@ class OAuthController extends Controller
         if (!is_string($token) || $token === '') {
             throw new BadRequestHttpException('token required');
         }
-        // Either an access token JTI or a refresh token id. Try both.
-        $accessRepo = new \westonhancock\editormcp\oauth\Repositories\AccessTokenRepository();
-        $refreshRepo = new \westonhancock\editormcp\oauth\Repositories\RefreshTokenRepository();
-        $accessRepo->revokeAccessToken($token);
-        $refreshRepo->forceRevoke($token);
+        // RFC 7009: the client sends the token in its raw over-the-wire form.
+        // TokenService figures out whether it's an access token (JWT → jti)
+        // or a refresh token (encrypted payload → refresh_token_id). Unknown
+        // tokens still get a 200 per the spec.
+        Plugin::$plugin->tokens->revokeRawToken($token);
         return $this->asJson(['revoked' => true]);
     }
 
@@ -287,5 +287,4 @@ class OAuthController extends Controller
         }
         return $client->getIdentifier();
     }
-
 }

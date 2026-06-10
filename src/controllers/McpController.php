@@ -10,9 +10,12 @@ use League\OAuth2\Server\Exception\OAuthServerException;
 use westonhancock\editormcp\Plugin;
 use westonhancock\editormcp\tools\ToolException;
 use westonhancock\editormcp\web\PsrBridge;
+use yii\helpers\IpHelper;
 use yii\web\BadRequestHttpException;
+use yii\web\ForbiddenHttpException;
 use yii\web\HttpException;
 use yii\web\Response;
+use yii\web\TooManyRequestsHttpException;
 use yii\web\UnauthorizedHttpException;
 
 /**
@@ -45,6 +48,7 @@ class McpController extends Controller
     private function handlePost(): Response
     {
         $tokenClaims = $this->authenticate();
+        $this->enforceRateLimit($tokenClaims);
         $body = (string) Craft::$app->getRequest()->getRawBody();
         $message = json_decode($body, true);
         if (!is_array($message)) {
@@ -262,6 +266,66 @@ class McpController extends Controller
         if (!$req->getIsSecureConnection() && Craft::$app->env !== 'dev') {
             throw new BadRequestHttpException('HTTPS required');
         }
+        $this->enforceIpAllowlist();
+    }
+
+    /**
+     * Optional CIDR allowlist for the MCP transport (Settings::$ipAllowlist).
+     * Empty list = no restriction. Browser-facing OAuth pages are deliberately
+     * not gated — this is for "tool calls only via VPN / Cloudflare Access"
+     * deployments where humans still need to reach the consent screen.
+     */
+    private function enforceIpAllowlist(): void
+    {
+        $allowlist = Plugin::$plugin->getSettings()->ipAllowlist;
+        if (empty($allowlist)) {
+            return;
+        }
+        $ip = Craft::$app->getRequest()->getUserIP() ?? '';
+        foreach ($allowlist as $range) {
+            try {
+                if ($ip !== '' && IpHelper::inRange($ip, $range)) {
+                    return;
+                }
+            } catch (\Throwable) {
+                Craft::warning("Invalid CIDR in ipAllowlist: $range", 'editor-mcp');
+            }
+        }
+        throw new ForbiddenHttpException('IP address not allowed');
+    }
+
+    /**
+     * Sliding per-user request cap (Settings::$rateLimitPerUserPerMinute, 0 =
+     * unlimited) using fixed one-minute windows in the app cache. A user who
+     * gets rejected 5 times within an hour fires a `rate_limit_anomaly`
+     * security event — once per hour, not per rejection.
+     */
+    private function enforceRateLimit(array $tokenClaims): void
+    {
+        $limit = Plugin::$plugin->getSettings()->rateLimitPerUserPerMinute;
+        if ($limit <= 0) {
+            return;
+        }
+        $cache = Craft::$app->getCache();
+        $userId = $tokenClaims['userId'];
+        $minuteKey = "editor-mcp:rl:$userId:" . intdiv(time(), 60);
+        $count = (int) $cache->get($minuteKey) + 1;
+        $cache->set($minuteKey, $count, 120);
+        if ($count <= $limit) {
+            return;
+        }
+
+        $hourKey = "editor-mcp:rl-hits:$userId:" . intdiv(time(), 3600);
+        $hits = (int) $cache->get($hourKey) + 1;
+        $cache->set($hourKey, $hits, 7200);
+        if ($hits === 5) {
+            Plugin::$plugin->security->notify('rate_limit_anomaly', [
+                'userId' => $userId,
+                'rejectionsThisHour' => $hits,
+            ]);
+        }
+
+        throw new TooManyRequestsHttpException('Rate limit exceeded');
     }
 
     private function jsonRpcError(mixed $id, int $code, string $message): Response

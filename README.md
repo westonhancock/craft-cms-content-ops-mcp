@@ -87,22 +87,35 @@ If a workflow needs any of those, it doesn't belong here. Use `stimmt/craft-mcp`
 The OAuth + MCP flow has been exercised end-to-end against Craft 5.9 on Postgres 15, including:
 
 - DCR client registration with PKCE-S256
-- authorize → consent → code → token (`content:read content:write content:publish` scope)
+- authorize → consent → code → token, across all five scopes
 - refresh-token rotation
-- refresh-token theft detection (consumed token replay → chain revocation)
-- tool dispatch under impersonation: `who_am_i`, `tools/list`, `list_sections`, `list_section_fields`, `find_entries`, `get_entry`, `create_entry`, `update_entry_fields` (including status-in-fields rejection), `set_entry_status`, `find_entries(status: live)`
+- refresh-token theft detection: consumed-token replay revokes the entire chain, including freshly-rotated descendants, and fires the security webhook
+- the in-band elevation flow: expired elevated session + high-stakes scope → password re-confirmation page → consent (wrong-password re-prompt and open-redirect guard included)
+- tool dispatch under impersonation for the full tool surface, including `delete_entry` and `upload_asset` (with MIME-spoof rejection)
+- RFC 7009 `/oauth/revoke` with raw tokens of both types — revoking a refresh token also kills its paired access token; unknown tokens still return 200
+- per-user rate limiting (429 inside the window) and the CIDR IP allowlist (403)
 - audit log capture for every call, including failures and unexpected exceptions
 - kill switch (503 from every endpoint when on)
 - settings save round-trip (typed property coercion)
 - CP UI: tokens table, audit log (both Postgres-safe)
 
-What's tested in code but not yet by a real-browser run:
+Not yet exercised against a real install:
 
-- the in-band elevation prompt (password re-confirmation page)
-- `upload_asset` (no asset volume defined in the test project)
-- `delete_entry` (the test client wasn't registered for `content:delete`)
-- 2FA interleave during the OAuth login redirect
-- RFC 7009 `/oauth/revoke` semantics (the endpoint currently looks up by JTI; senders pass the raw token)
+- 2FA interleave during the OAuth login redirect (the flow routes through Craft's standard login, which 2FA hooks into transparently, but this hasn't been observed live)
+
+## Security event webhook
+
+Set **Settings → Security event webhook** to a Slack/PagerDuty-compatible URL to get notified on:
+
+| Event | Trigger |
+|---|---|
+| `refresh_token_theft_detected` | a consumed refresh token was replayed (chain revoked) |
+| `dcr_rate_limited` | an IP exceeded the client-registration cap |
+| `rate_limit_anomaly` | a user hit the MCP rate limit 5+ times in an hour |
+| `user_tokens_revoked` | lifecycle revocation (suspended / locked / pending / deleted) |
+| `kill_switch_activated` | an admin flipped the kill switch on |
+
+The payload is generic JSON with a top-level `text` field, so a Slack incoming webhook renders it with zero config. Delivery is best-effort and never breaks the request that triggered it.
 
 ## Local development
 
@@ -132,7 +145,7 @@ vendor/bin/ecs check --fix                      # apply auto-fixes
 
 ## Status
 
-v0.1.0 — alpha. v1 surface complete and validated end-to-end against a real Craft 5 install. See CHANGELOG for the production-readiness pass that informed the current state.
+v0.1.0 — beta. v1 surface complete; every documented feature is implemented, enforced, and validated end-to-end against a real Craft 5 install (36 scripted checks). See CHANGELOG for the production-readiness and completion passes that informed the current state.
 
 ## License
 

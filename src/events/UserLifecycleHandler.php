@@ -29,6 +29,10 @@ class UserLifecycleHandler
         $user = $event->sender;
         if ($user->suspended || $user->pending || $user->locked) {
             Plugin::$plugin->tokens->revokeAllForUser($user->id);
+            Plugin::$plugin->security->notify('user_tokens_revoked', [
+                'userId' => (int) $user->id,
+                'reason' => $user->suspended ? 'suspended' : ($user->locked ? 'locked' : 'pending'),
+            ]);
             Plugin::$plugin->audit->log([
                 'requestId' => bin2hex(random_bytes(8)),
                 'userId' => $user->id,
@@ -45,6 +49,10 @@ class UserLifecycleHandler
         /** @var User $user */
         $user = $event->sender;
         Plugin::$plugin->tokens->revokeAllForUser($user->id);
+        Plugin::$plugin->security->notify('user_tokens_revoked', [
+            'userId' => (int) $user->id,
+            'reason' => 'deleted',
+        ]);
         Plugin::$plugin->audit->log([
             'requestId' => bin2hex(random_bytes(8)),
             'userId' => $user->id,
