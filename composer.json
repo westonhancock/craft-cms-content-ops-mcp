@@ -2,7 +2,7 @@
     "name": "westonhancock/craft-editor-mcp",
     "description": "OAuth-authenticated MCP server for Craft CMS — lets AI assistants perform content-ops as a named editor, with Craft-native permission enforcement.",
     "type": "craft-plugin",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "license": "MIT",
     "support": {
         "source": "https://github.com/westonhancock/craft-cms-content-ops-mcp",

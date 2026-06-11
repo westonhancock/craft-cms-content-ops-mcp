@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.0 - 2026-06-10
+
 ### Fixed (2026-06-10, post-completion-pass)
 
 - **Dynamic client registration broke strict MCP clients (Claude Code)**: the DCR response included `"client_secret": null` for public clients. RFC 7591 §3.2.1 requires the field to be omitted when no secret is issued, and the MCP TypeScript SDK rejects a non-string value — Claude Code silently re-registered in a loop and never opened the authorization page. The field is now omitted for public clients, and `client_secret_expires_at: 0` accompanies it for confidential ones.
