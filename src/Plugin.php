@@ -131,6 +131,9 @@ class Plugin extends BasePlugin
             function(RegisterUrlRulesEvent $event): void {
                 $event->rules['GET .well-known/oauth-authorization-server'] = 'editor-mcp/o-auth/metadata';
                 $event->rules['GET .well-known/oauth-protected-resource'] = 'editor-mcp/o-auth/protected-resource-metadata';
+                // RFC 9728 §3.1 path-appended form for the /mcp resource — MCP
+                // clients try this before falling back to the root well-known.
+                $event->rules['GET .well-known/oauth-protected-resource/mcp'] = 'editor-mcp/o-auth/protected-resource-metadata';
                 $event->rules['POST oauth/register'] = 'editor-mcp/o-auth/register';
                 $event->rules['POST oauth/token'] = 'editor-mcp/o-auth/token';
                 $event->rules['GET oauth/authorize'] = 'editor-mcp/o-auth/authorize';
