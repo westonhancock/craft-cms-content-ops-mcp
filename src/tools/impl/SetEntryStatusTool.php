@@ -50,8 +50,9 @@ class SetEntryStatusTool implements Tool
             throw new ToolException(-32008, "Entry not found: $id");
         }
 
+        // canSave() enforces owner/peer/draft rules; a status change is still a save.
         $user = Craft::$app->getUser()->getIdentity();
-        if (!$user || !$user->can("saveEntries:" . $entry->getSection()->uid)) {
+        if (!$user || !Craft::$app->getElements()->canSave($entry, $user)) {
             throw new ToolException(-32004, 'No permission to change this entry\'s status');
         }
 

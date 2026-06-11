@@ -15,7 +15,10 @@ class ClientRepository implements ClientRepositoryInterface
     public function getClientEntity($clientIdentifier): ?ClientEntityInterface
     {
         $record = OAuthClientRecord::findOne(['clientId' => (string) $clientIdentifier]);
-        if (!$record || $record->revoked) {
+        // Unapproved (pending) clients must not be usable when dcrRequireApproval
+        // is on — register() persists them with approved=false, and the OAuth
+        // flow is the only place that gate is enforced.
+        if (!$record || $record->revoked || !$record->approved) {
             return null;
         }
         return $this->toEntity($record);
@@ -29,7 +32,7 @@ class ClientRepository implements ClientRepositoryInterface
     public function validateClient($clientIdentifier, $clientSecret, $grantType): bool
     {
         $record = OAuthClientRecord::findOne(['clientId' => (string) $clientIdentifier]);
-        if (!$record || $record->revoked) {
+        if (!$record || $record->revoked || !$record->approved) {
             return false;
         }
         // Public clients (no secretHash): PKCE-only. League OAuth handles PKCE validation separately.

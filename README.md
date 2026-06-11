@@ -145,7 +145,7 @@ vendor/bin/ecs check --fix                      # apply auto-fixes
 
 ## Status
 
-v0.2.0 — beta. v1 surface complete; every documented feature is implemented, enforced, and validated end-to-end against a real Craft 5 install (36 scripted checks). See CHANGELOG for the production-readiness and completion passes that informed the current state.
+v0.2.1 — beta. v1 surface complete; every documented feature is implemented, enforced, and validated end-to-end against a real Craft 5 install (36 scripted checks). See CHANGELOG for the production-readiness and completion passes that informed the current state.
 
 ## License
 

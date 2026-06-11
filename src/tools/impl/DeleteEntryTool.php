@@ -45,8 +45,10 @@ class DeleteEntryTool implements Tool
         if (!$entry) {
             throw new ToolException(-32008, "Entry not found: $id");
         }
+        // canDelete() folds in deletePeerEntries and draft/owner rules that a bare
+        // deleteEntries:<section> check would miss.
         $user = Craft::$app->getUser()->getIdentity();
-        if (!$user || !$user->can("deleteEntries:" . $entry->getSection()->uid)) {
+        if (!$user || !Craft::$app->getElements()->canDelete($entry, $user)) {
             throw new ToolException(-32004, 'No permission to delete this entry');
         }
         if (!Craft::$app->getElements()->deleteElement($entry)) {

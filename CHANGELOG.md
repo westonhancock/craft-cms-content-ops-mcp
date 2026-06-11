@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.2.1 - 2026-06-10
+
+### Security
+
+- **DCR approval is now enforced.** When `dcrRequireApproval` is on, `register()` persists clients as unapproved, but the OAuth repository only rejected *revoked* clients — so a freshly self-registered anonymous client could still complete the whole OAuth flow. `ClientRepository::getClientEntity()` and `validateClient()` now reject `!approved` clients too.
+- **Entry write/delete tools now enforce Craft's element-level authorization.** `update_entry_fields` computed a permission result but never acted on it before calling `saveElement()`; `set_entry_status` and `delete_entry` checked only broad section permissions. All three now require `Elements::canSave()` / `canDelete()` against the impersonated user, which folds in the owner/peer/draft rules a bare `saveEntries:<section>` / `deleteEntries:<section>` check misses.
+- **Read tools no longer leak peer/draft content.** `find_entries` and `get_entry` checked only `viewEntries:<section>`; `find_assets` / `get_asset` checked only `viewAssets:<volume>`. Craft's `canView()` adds peer-entry, draft, and uploader restrictions on top. Single-element reads now require `canView()`; the find tools filter each result page through `canView()` and report `total` over the viewable set only.
+- **Authenticated SQL-expression injection via `find_entries.orderBy` is closed.** The raw `orderBy` string was passed straight to the query, and Yii leaves column names containing `(` unquoted. `orderBy` is now allowlisted to `postDate`, `title`, `dateUpdated`, `dateCreated`, `id` and resolved to a Yii `column => SORT_*` spec, so the value never reaches SQL as a raw string.
+- **Asset upload folder paths are validated.** `upload_asset` built `VolumeFolder::path` from untrusted segments without checking for `.`/`..`, separators, control/NUL chars, or length. Each segment is now validated before any folder is created.
+
 ## 0.2.0 - 2026-06-10
 
 ### Fixed (2026-06-10, post-completion-pass)

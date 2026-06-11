@@ -69,14 +69,46 @@ class FindEntriesTool implements Tool
         }
         $query->limit((int) ($args['limit'] ?? 25));
         $query->offset((int) ($args['offset'] ?? 0));
-        $query->orderBy((string) ($args['orderBy'] ?? 'postDate DESC'));
+        // orderBy is allowlisted, not passed through — a raw string reaches Yii's
+        // ORDER BY and column names containing "(" are left unquoted (SQL injection).
+        $query->orderBy($this->parseOrderBy((string) ($args['orderBy'] ?? 'postDate DESC')));
 
-        // Craft enforces per-section permission natively against the impersonated user.
-        $entries = $query->all();
+        // Element queries don't apply canView(); filter the page so peer entries and
+        // drafts the user can't see are never returned. total reflects viewable-only.
+        $user = Craft::$app->getUser()->getIdentity();
+        $entries = array_values(array_filter(
+            $query->all(),
+            static fn(Entry $e): bool => $user !== null && $e->canView($user),
+        ));
         return [
-            'total' => (int) (clone $query)->limit(null)->offset(null)->count(),
+            'total' => count($entries),
             'entries' => array_map([$this, 'summarize'], $entries),
         ];
+    }
+
+    /**
+     * Allowlist orderBy to known columns + direction, returned as a Yii order
+     * spec (column => SORT_*) so the value never reaches SQL as a raw string.
+     */
+    private function parseOrderBy(string $raw): array
+    {
+        static $columns = [
+            'postdate' => 'postDate',
+            'title' => 'title',
+            'dateupdated' => 'dateUpdated',
+            'datecreated' => 'dateCreated',
+            'id' => 'elements.id',
+        ];
+        $parts = preg_split('/\s+/', trim($raw)) ?: [];
+        $field = strtolower($parts[0] ?? 'postdate');
+        $dir = strtoupper($parts[1] ?? 'DESC');
+        if (!isset($columns[$field])) {
+            throw new ToolException(
+                -32602,
+                'Unsupported orderBy field. Allowed: postDate, title, dateUpdated, dateCreated, id',
+            );
+        }
+        return [$columns[$field] => $dir === 'ASC' ? SORT_ASC : SORT_DESC];
     }
 
     private function summarize(Entry $entry): array

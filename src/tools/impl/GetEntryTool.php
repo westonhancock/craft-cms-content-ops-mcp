@@ -51,8 +51,10 @@ class GetEntryTool implements Tool
             throw new ToolException(-32008, "Entry not found: $id");
         }
 
+        // canView() folds in peer/draft restrictions that a bare
+        // viewEntries:<section> check would leak past.
         $user = Craft::$app->getUser()->getIdentity();
-        if (!$user || !$user->can("viewEntries:" . $entry->getSection()->uid)) {
+        if (!$user || !Craft::$app->getElements()->canView($entry, $user)) {
             throw new ToolException(-32004, 'No permission to view this entry');
         }
 

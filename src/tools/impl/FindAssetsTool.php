@@ -66,9 +66,14 @@ class FindAssetsTool implements Tool
         $query->limit((int) ($args['limit'] ?? 25));
         $query->offset((int) ($args['offset'] ?? 0));
 
-        $assets = $query->all();
+        // Volume-level viewAssets passed above, but canView() adds peer/uploader
+        // rules; filter the page so peer asset metadata/URLs aren't leaked.
+        $assets = array_values(array_filter(
+            $query->all(),
+            static fn(Asset $a): bool => $a->canView($user),
+        ));
         return [
-            'total' => (int) (clone $query)->limit(null)->offset(null)->count(),
+            'total' => count($assets),
             'assets' => array_map(static fn(Asset $a) => [
                 'id' => $a->id,
                 'filename' => $a->filename,

@@ -127,6 +127,9 @@ class UploadAssetTool implements Tool
         $parts = array_values(array_filter(explode('/', trim($folderPath, '/'))));
         $current = $root;
         foreach ($parts as $name) {
+            if (!$this->isSafePathSegment($name)) {
+                throw new ToolException(-32602, "Invalid folder path segment: $name");
+            }
             $existing = $assets->findFolders([
                 'parentId' => $current->id,
                 'name' => $name,
@@ -144,5 +147,21 @@ class UploadAssetTool implements Tool
             $current = $folder;
         }
         return $current->id;
+    }
+
+    /**
+     * Reject untrusted folder segments before they become a VolumeFolder::path:
+     * traversal (`.`/`..`), path separators, control/NUL chars, and over-length.
+     */
+    private function isSafePathSegment(string $name): bool
+    {
+        if ($name === '' || $name === '.' || $name === '..') {
+            return false;
+        }
+        if (strlen($name) > 255) {
+            return false;
+        }
+        // Backslash, forward slash, and C0 control chars (incl. NUL).
+        return !preg_match('#[\\\\/\x00-\x1f]#', $name);
     }
 }

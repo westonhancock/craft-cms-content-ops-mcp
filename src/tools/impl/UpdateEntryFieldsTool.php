@@ -58,12 +58,11 @@ class UpdateEntryFieldsTool implements Tool
             throw new ToolException(-32008, "Entry not found: $id");
         }
 
+        // Element-level authorization: canSave() folds in section save permission
+        // plus the owner/peer/draft rules a bare saveEntries:<section> check misses.
         $user = Craft::$app->getUser()->getIdentity();
-        $section = $entry->getSection();
-        if (!$user || !$user->can("saveEntries:$section->uid") || ($entry->authorId !== $user->id
-            && !$user->can("saveEntries:$section->uid:peers"))) {
-            // Best-effort permission check; Craft enforces again on save.
-            // We don't hard-fail here on peer permission shape variance — let saveElement throw.
+        if (!$user || !Craft::$app->getElements()->canSave($entry, $user)) {
+            throw new ToolException(-32004, 'No permission to edit this entry');
         }
 
         if (isset($args['fields']) && is_array($args['fields'])) {

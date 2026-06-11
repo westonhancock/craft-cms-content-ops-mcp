@@ -42,9 +42,10 @@ class GetAssetTool implements Tool
         if (!$asset) {
             throw new ToolException(-32008, "Asset not found: $id");
         }
+        // canView() folds in peer/uploader rules a bare viewAssets:<volume> misses.
         $user = Craft::$app->getUser()->getIdentity();
         $volume = $asset->getVolume();
-        if (!$user || !$user->can("viewAssets:$volume->uid")) {
+        if (!$user || !Craft::$app->getElements()->canView($asset, $user)) {
             throw new ToolException(-32004, 'No permission to view this asset');
         }
         $fields = [];
