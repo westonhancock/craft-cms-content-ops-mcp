@@ -1,5 +1,15 @@
 # Release Notes for Editor MCP
 
+## Unreleased
+
+### Fixed
+
+- `get_entry` now expands Matrix fields inline — each block is returned with its `type` and full (recursively serialized) field content, instead of bare `{id, title}` stubs. Fetching a nested block id directly no longer errors.
+
+### Added
+
+- Continuous integration (GitHub Actions): ECS, PHPStan, and a PHPUnit unit suite run on every push and pull request.
+
 ## 0.1.0 - 2026-06-12
 
 Initial release. An OAuth-authenticated MCP server for Craft CMS that lets AI

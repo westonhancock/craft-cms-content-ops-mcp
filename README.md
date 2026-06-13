@@ -10,6 +10,16 @@ Ask things like *“find the last five news entries,”* *“draft a post titled
 - Connects over HTTPS using standard OAuth — the assistant opens your browser, you log in to Craft, you approve, done
 - 15 focused content tools (entries, assets, sections, categories, globals)
 
+## Screenshots
+
+| Authorize an assistant | Audit log |
+|---|---|
+| ![Consent screen](docs/screenshots/consent.png) | ![Audit log](docs/screenshots/audit-log.png) |
+
+| Connected tokens | Settings |
+|---|---|
+| ![Tokens](docs/screenshots/tokens.png) | ![Settings](docs/screenshots/settings.png) |
+
 ---
 
 ## Install
