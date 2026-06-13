@@ -1,0 +1,53 @@
+{% extends "_layouts/cp" %}
+{% set title = "Editor MCP — Audit Log" %}
+{% set selectedSubnavItem = "audit" %}
+{% set crumbs = [{ label: "Editor MCP", url: cpUrl("editor-mcp") }] %}
+
+{% block content %}
+<form method="get" class="flex" style="gap:0.5em; margin-bottom:1em;">
+    <input type="text" name="user" placeholder="user" value="{{ filters.user }}" class="text">
+    <input type="text" name="tool" placeholder="tool" value="{{ filters.tool }}" class="text">
+    <select name="status" class="select">
+        <option value="">any status</option>
+        <option value="success" {{ filters.status == "success" ? "selected" }}>success</option>
+        <option value="denied" {{ filters.status == "denied" ? "selected" }}>denied</option>
+        <option value="error" {{ filters.status == "error" ? "selected" }}>error</option>
+    </select>
+    <input type="datetime-local" name="since" value="{{ filters.since }}" class="text">
+    <button type="submit" class="btn submit">Filter</button>
+</form>
+
+<table class="data fullwidth">
+    <thead>
+        <tr>
+            <th>When</th>
+            <th>User</th>
+            <th>Tool</th>
+            <th>Status</th>
+            <th>Duration</th>
+            <th>IP</th>
+            <th>Error</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in rows %}
+        <tr>
+            <td><a href="{{ cpUrl("editor-mcp/audit/" ~ r.id) }}">{{ r.dateCreated|date("Y-m-d H:i:s") }}</a></td>
+            <td>{{ r.username ?? "—" }}</td>
+            <td><code>{{ r.tool }}</code></td>
+            <td>
+                {% if r.status == "success" %}<span class="status green"></span>
+                {% elseif r.status == "denied" %}<span class="status orange"></span>
+                {% else %}<span class="status red"></span>{% endif %}
+                {{ r.status }}
+            </td>
+            <td>{{ r.durationMs }}ms</td>
+            <td>{{ r.ipAddress }}</td>
+            <td>{{ r.errorMessage }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><em>No entries match.</em></td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

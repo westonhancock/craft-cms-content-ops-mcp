@@ -1,0 +1,164 @@
+{% extends "_layouts/cp" %}
+{% set title = "Editor MCP — Settings" %}
+{% set selectedSubnavItem = "settings" %}
+{% set crumbs = [{ label: "Editor MCP", url: cpUrl("editor-mcp") }] %}
+{% import "_includes/forms" as forms %}
+
+{% block content %}
+<form method="post" accept-charset="UTF-8">
+    {{ csrfInput() }}
+    {{ actionInput("editor-mcp/settings/save") }}
+
+    {{ forms.lightswitchField({
+        label: "Enabled",
+        instructions: "Master switch. Disabled by default in production for safety.",
+        name: "settings[enabled]",
+        on: settings.enabled,
+    }) }}
+
+    {{ forms.textField({
+        label: "Access token TTL (s)",
+        instructions: "Maximum lifetime of an access token. Capped at 3600.",
+        name: "settings[accessTokenTtl]",
+        value: settings.accessTokenTtl,
+        type: "number",
+    }) }}
+
+    {{ forms.textField({
+        label: "Refresh token TTL (s)",
+        name: "settings[refreshTokenTtl]",
+        value: settings.refreshTokenTtl,
+        type: "number",
+    }) }}
+
+    {{ forms.textField({
+        label: "Auth code TTL (s)",
+        name: "settings[authCodeTtl]",
+        value: settings.authCodeTtl,
+        type: "number",
+    }) }}
+
+    <hr>
+    <h2>Dynamic Client Registration</h2>
+
+    {{ forms.textField({
+        label: "DCR per IP per day",
+        name: "settings[dcrPerIpPerDay]",
+        value: settings.dcrPerIpPerDay,
+        type: "number",
+    }) }}
+
+    {{ forms.lightswitchField({
+        label: "Require admin approval for new clients",
+        instructions: "When on, DCR-registered clients can't authorize users until approved in the Clients tab.",
+        name: "settings[dcrRequireApproval]",
+        on: settings.dcrRequireApproval,
+    }) }}
+
+    {{ forms.textareaField({
+        label: "Allowed redirect URI schemes",
+        instructions: "One per line. http only allowed for loopback / dev.",
+        name: "settings[allowedRedirectSchemes]",
+        value: settings.allowedRedirectSchemes|join("\n"),
+        rows: 3,
+    }) }}
+
+    {{ forms.textareaField({
+        label: "Redirect URI patterns (regex)",
+        instructions: "Optional. One PCRE per line; all must match.",
+        name: "settings[redirectUriPatterns]",
+        value: settings.redirectUriPatterns|join("\n"),
+        rows: 3,
+    }) }}
+
+    <hr>
+    <h2>Audit</h2>
+
+    {{ forms.textField({
+        label: "Audit retention (days)",
+        instructions: "Empty = never delete.",
+        name: "settings[auditRetentionDays]",
+        value: settings.auditRetentionDays,
+        type: "number",
+    }) }}
+
+    {{ forms.lightswitchField({
+        label: "Verbose audit (logs values, NEVER in prod)",
+        name: "settings[auditVerbose]",
+        on: settings.auditVerbose,
+    }) }}
+
+    {{ forms.textField({
+        label: "Security event webhook",
+        instructions: "Slack/PagerDuty URL. Notified on revocations, abuse, etc.",
+        name: "settings[securityWebhookUrl]",
+        value: settings.securityWebhookUrl,
+    }) }}
+
+    <hr>
+    <h2>Assets</h2>
+
+    {{ forms.textField({
+        label: "Max upload bytes (raw)",
+        name: "settings[assetUploadMaxBytes]",
+        value: settings.assetUploadMaxBytes,
+        type: "number",
+    }) }}
+
+    {{ forms.textareaField({
+        label: "MIME allowlist",
+        instructions: "One per line. Empty = inherit per-volume Craft config.",
+        name: "settings[assetMimeAllowlist]",
+        value: settings.assetMimeAllowlist|join("\n"),
+        rows: 3,
+    }) }}
+
+    <hr>
+    <h2>High-stakes scopes</h2>
+
+    {{ forms.textareaField({
+        label: "Force prompt=login for these scopes",
+        instructions: "One scope per line. Default: content:publish, content:delete.",
+        name: "settings[highStakesScopes]",
+        value: settings.highStakesScopes|join("\n"),
+        rows: 3,
+    }) }}
+
+    <hr>
+    <h2>Rate limiting</h2>
+
+    {{ forms.textField({
+        label: "Per-user requests per minute",
+        name: "settings[rateLimitPerUserPerMinute]",
+        value: settings.rateLimitPerUserPerMinute,
+        type: "number",
+    }) }}
+
+    {{ forms.textareaField({
+        label: "IP allowlist (CIDR)",
+        instructions: "Optional. One CIDR per line. Empty = no restriction. Applies to the MCP transport endpoint only — OAuth/consent pages stay reachable for humans.",
+        name: "settings[ipAllowlist]",
+        value: settings.ipAllowlist|join("\n"),
+        rows: 3,
+    }) }}
+
+    <div class="buttons" style="margin-top:1em;">
+        <button type="submit" class="btn submit">Save</button>
+    </div>
+</form>
+
+<hr style="margin-top:2em;">
+
+<h2>Kill switch</h2>
+<p>One-click revoke of all tokens and disable all OAuth + MCP endpoints. Use during incident response.</p>
+<form method="post">
+    {{ csrfInput() }}
+    {{ actionInput("editor-mcp/settings/kill-switch") }}
+    {% if settings.killSwitch %}
+        <p><span class="status red"></span> <strong>Kill switch is ON.</strong> All tokens are revoked and endpoints return 503.</p>
+        <button type="submit" class="btn submit">Turn OFF</button>
+    {% else %}
+        <button type="submit" class="btn delete">Activate kill switch</button>
+    {% endif %}
+</form>
+{% endblock %}

@@ -1,0 +1,45 @@
+{
+    "name": "westonhancock/craft-editor-mcp",
+    "description": "OAuth-authenticated MCP server for Craft CMS — lets AI assistants perform content-ops as a named editor, with Craft-native permission enforcement.",
+    "type": "craft-plugin",
+    "version": "0.1.0",
+    "license": "MIT",
+    "support": {
+        "source": "https://github.com/westonhancock/craft-cms-content-ops-mcp",
+        "issues": "https://github.com/westonhancock/craft-cms-content-ops-mcp/issues"
+    },
+    "require": {
+        "php": "^8.2",
+        "craftcms/cms": "^5.0",
+        "league/oauth2-server": "^8.5",
+        "lcobucci/jwt": "^5.2",
+        "nyholm/psr7": "^1.8",
+        "nyholm/psr7-server": "^1.1"
+    },
+    "require-dev": {
+        "craftcms/ecs": "dev-main",
+        "craftcms/phpstan": "dev-main"
+    },
+    "autoload": {
+        "psr-4": {
+            "westonhancock\\editormcp\\": "src/"
+        }
+    },
+    "extra": {
+        "handle": "editor-mcp",
+        "name": "Editor MCP",
+        "description": "Per-user OAuth MCP server for content editors",
+        "developer": "Weston Hancock",
+        "documentationUrl": "https://github.com/westonhancock/craft-cms-content-ops-mcp",
+        "class": "westonhancock\\editormcp\\Plugin"
+    },
+    "config": {
+        "allow-plugins": {
+            "yiisoft/yii2-composer": true,
+            "craftcms/plugin-installer": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true
+        },
+        "sort-packages": true
+    }
+}

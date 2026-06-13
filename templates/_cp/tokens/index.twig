@@ -1,0 +1,58 @@
+{% extends "_layouts/cp" %}
+{% set title = "Editor MCP — Tokens" %}
+{% set selectedSubnavItem = "tokens" %}
+{% set crumbs = [{ label: "Editor MCP", url: cpUrl("editor-mcp") }] %}
+
+{% block content %}
+<table class="data fullwidth">
+    <thead>
+        <tr>
+            <th>Client</th>
+            <th>User</th>
+            <th>Scopes</th>
+            <th>Issued</th>
+            <th>Last used</th>
+            <th>Expires</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in rows %}
+        <tr>
+            <td><code>{{ r.clientName ?? r.clientId }}</code></td>
+            <td>{{ r.username ?? "user #" ~ r.userId }}</td>
+            <td>
+                {% for s in r.scopes|json_decode %}
+                    <span class="status">{{ s }}</span>
+                {% endfor %}
+            </td>
+            <td>{{ r.dateCreated|date("Y-m-d H:i") }}</td>
+            <td>{{ r.lastUsedAt ? r.lastUsedAt|date("Y-m-d H:i") : "—" }}</td>
+            <td>{{ r.expiresAt|date("Y-m-d H:i") }}</td>
+            <td>
+                {% if r.revokedAt %}
+                    <span class="status red"></span> revoked
+                {% elseif r.expiresAt < now|date("Y-m-d H:i:s") %}
+                    <span class="status grey"></span> expired
+                {% else %}
+                    <span class="status green"></span> active
+                {% endif %}
+            </td>
+            <td>
+                {% if not r.revokedAt %}
+                <form method="post" action="" style="display:inline">
+                    {{ csrfInput() }}
+                    {{ actionInput("editor-mcp/tokens/revoke") }}
+                    <input type="hidden" name="id" value="{{ r.id }}">
+                    <button class="btn small delete" type="submit">Revoke</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8"><em>No tokens issued yet.</em></td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
