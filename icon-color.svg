@@ -1,0 +1,58 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Editor MCP">
+  <defs>
+    <linearGradient id="nib" x1="44" y1="24" x2="86" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5C36F0"/>
+      <stop offset="0.55" stop-color="#4920E8"/>
+      <stop offset="1" stop-color="#310CDA"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="90" y1="22" x2="104" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#5C36F0"/>
+    </linearGradient>
+    <radialGradient id="tileGlow" cx="0.5" cy="0.42" r="0.65">
+      <stop offset="0" stop-color="#310CDA" stop-opacity="0.55"/>
+      <stop offset="0.6" stop-color="#310CDA" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#310CDA" stop-opacity="0"/>
+    </radialGradient>
+    <!-- blur used ONLY on glow clones behind crisp shapes -->
+    <filter id="soft" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+
+  <!-- Deep-ink tile with brand border -->
+  <rect x="2" y="2" width="124" height="124" rx="30" fill="#121517"/>
+  <rect x="2" y="2" width="124" height="124" rx="30" fill="url(#tileGlow)"/>
+  <rect x="2.75" y="2.75" width="122.5" height="122.5" rx="29.25" fill="none" stroke="#2C3236" stroke-width="1.5"/>
+
+  <!-- Fountain-pen nib -->
+  <g transform="translate(9.6,13) scale(0.85)">
+    <!-- soft purple glow halo (blurred clone, behind) -->
+    <path d="M64 110 C 62 84 40 62 38 52 C 36 40 42 30 52 26 C 58 23 70 23 76 26 C 86 30 92 40 90 52 C 88 62 66 84 64 110 Z"
+          fill="#4920E8" opacity="0.55" filter="url(#soft)"/>
+    <!-- crisp nib -->
+    <path d="M64 110 C 62 84 40 62 38 52 C 36 40 42 30 52 26 C 58 23 70 23 76 26 C 86 30 92 40 90 52 C 88 62 66 84 64 110 Z"
+          fill="url(#nib)"/>
+    <!-- center slit -->
+    <path d="M64 103 L64 56" stroke="#0E1012" stroke-width="2.4" stroke-linecap="round" opacity="0.9"/>
+    <!-- breather hole -->
+    <circle cx="64" cy="50" r="4.5" fill="#0E1012"/>
+    <circle cx="64" cy="50" r="4.5" fill="none" stroke="#5C36F0" stroke-width="1.2" opacity="0.7"/>
+    <!-- edge sheen, traces the top-left outline -->
+    <path d="M51 27.5 C 41.5 31.5 35.8 41.4 38 52" stroke="#7E5BF6" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.6"/>
+  </g>
+
+  <!-- AI sparks (crisp, with a soft bloom behind) -->
+  <path d="M97 22 C 98.5 35 102 38.5 113 40 C 102 41.5 98.5 45 97 57 C 95.5 45 92 41.5 81 40 C 92 38.5 95.5 35 97 22 Z"
+        transform="translate(5,-4)" fill="#5C36F0" opacity="0.5" filter="url(#soft)"/>
+  <g transform="translate(5,-4)">
+    <path d="M97 22 C 98.5 35 102 38.5 113 40 C 102 41.5 98.5 45 97 57 C 95.5 45 92 41.5 81 40 C 92 38.5 95.5 35 97 22 Z"
+          fill="url(#spark)"/>
+    <path d="M99 61 C 99.7 66 101.2 67.5 106 68.2 C 101.2 68.9 99.7 70.4 99 75.4 C 98.3 70.4 96.8 68.9 92 68.2 C 96.8 67.5 98.3 66 99 61 Z"
+          fill="#5C36F0" opacity="0.9"/>
+  </g>
+
+  <!-- third spark, over the top-right of the pen head -->
+  <path d="M80 36 C 80.6 40.4 81.6 41.4 86 42 C 81.6 42.6 80.6 43.6 80 48 C 79.4 43.6 78.4 42.6 74 42 C 78.4 41.4 79.4 40.4 80 36 Z"
+        fill="#CFC2F4" opacity="0.85"/>
+</svg>
