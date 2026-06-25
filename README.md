@@ -203,4 +203,4 @@ vendor/bin/ecs check                            # code style
 
 ## License
 
-MIT
+This is commercial software. Licensed under the [Craft License](LICENSE.md) — a paid license entitles use in a single production environment. See [LICENSE.md](LICENSE.md) for the full terms.

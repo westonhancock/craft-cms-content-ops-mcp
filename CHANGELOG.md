@@ -1,6 +1,6 @@
 # Release Notes for Editor MCP
 
-## Unreleased
+## 0.1.1 - 2026-06-25
 
 ### Fixed
 
@@ -9,6 +9,10 @@
 ### Added
 
 - Continuous integration (GitHub Actions): ECS, PHPStan, and a PHPUnit unit suite run on every push and pull request.
+
+### Changed
+
+- Licensed under the [Craft License](LICENSE.md) to match the plugin's paid Plugin Store listing (previously MIT). `composer.json` license set to `proprietary`.
 
 ## 0.1.0 - 2026-06-12
 
