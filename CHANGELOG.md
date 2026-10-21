@@ -1,5 +1,12 @@
 # Release Notes for Editor MCP
 
+## Unreleased
+
+### Fixed
+
+- The Control Panel sidebar no longer shows a second, icon-less "Editor MCP" item. The plugin registered its nav item twice (once through `hasCpSection`, once through `EVENT_REGISTER_CP_NAV_ITEMS`); it now registers once via `getCpNavItem()`, with the icon and subnav.
+- The Scopes column on the Tokens page no longer wraps one character per line. Scopes were rendered inside Craft's `.status` dot element; they now render as plain `<code>` labels.
+
 ## 0.1.1 - 2026-06-25
 
 ### Fixed

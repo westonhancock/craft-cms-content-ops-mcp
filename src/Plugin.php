@@ -8,11 +8,9 @@ use Craft;
 use craft\base\Model;
 use craft\base\Plugin as BasePlugin;
 use craft\elements\User;
-use craft\events\RegisterCpNavItemsEvent;
 use craft\events\RegisterTemplateRootsEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\helpers\UrlHelper;
-use craft\web\twig\variables\Cp;
 use craft\web\UrlManager;
 use craft\web\View;
 use westonhancock\editormcp\events\UserLifecycleHandler;
@@ -66,7 +64,6 @@ class Plugin extends BasePlugin
 
         $this->registerRoutes();
         $this->registerUserLifecycleEvents();
-        $this->registerCpNav();
         $this->registerSiteTemplateRoots();
         $this->registerGc();
     }
@@ -180,27 +177,26 @@ class Plugin extends BasePlugin
         );
     }
 
-    private function registerCpNav(): void
+    public function getCpNavItem(): ?array
     {
-        Event::on(
-            Cp::class,
-            Cp::EVENT_REGISTER_CP_NAV_ITEMS,
-            function(RegisterCpNavItemsEvent $event): void {
-                if (!Craft::$app->getUser()->checkPermission('accessPlugin-editor-mcp')) {
-                    return;
-                }
-                $event->navItems[] = [
-                    'url' => 'editor-mcp',
-                    'label' => 'Editor MCP',
-                    'icon' => dirname(__DIR__) . '/icon-mask.svg',
-                    'subnav' => [
-                        'tokens' => ['label' => 'Tokens', 'url' => 'editor-mcp/tokens'],
-                        'clients' => ['label' => 'Clients', 'url' => 'editor-mcp/clients'],
-                        'audit' => ['label' => 'Audit Log', 'url' => 'editor-mcp/audit'],
-                        'settings' => ['label' => 'Settings', 'url' => 'editor-mcp/settings'],
-                    ],
-                ];
-            },
-        );
+        $item = parent::getCpNavItem();
+        $item['label'] = 'Editor MCP';
+        $item['subnav'] = [
+            'tokens' => ['label' => 'Tokens', 'url' => 'editor-mcp/tokens'],
+            'clients' => ['label' => 'Clients', 'url' => 'editor-mcp/clients'],
+            'audit' => ['label' => 'Audit Log', 'url' => 'editor-mcp/audit'],
+            'settings' => ['label' => 'Settings', 'url' => 'editor-mcp/settings'],
+        ];
+        return $item;
+    }
+
+    /**
+     * The icon lives at the repo root (next to icon.svg), not in src/, where
+     * Craft looks by default.
+     */
+    protected function cpNavIconPath(): ?string
+    {
+        $path = dirname(__DIR__) . '/icon-mask.svg';
+        return is_file($path) ? $path : null;
     }
 }
