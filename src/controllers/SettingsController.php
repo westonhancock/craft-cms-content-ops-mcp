@@ -19,7 +19,6 @@ class SettingsController extends Controller
         $settings = Plugin::$plugin->getSettings();
         return $this->renderTemplate('editor-mcp/_cp/settings', [
             'settings' => $settings,
-            'keySources' => Plugin::$plugin->tokens->keySources(),
         ]);
     }
 

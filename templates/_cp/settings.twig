@@ -149,27 +149,6 @@
 
 <hr style="margin-top:2em;">
 
-<h2>Signing keys</h2>
-<p>Set these with <code>privateKey</code> and <code>encryptionKey</code> in <code>config/editor-mcp.php</code>. Run <code>php craft editor-mcp/keys/generate</code> to create the values.</p>
-<table class="data">
-    <tbody>
-        {% for label, source in { "Private key": keySources.privateKey, "Encryption key": keySources.encryptionKey } %}
-        <tr>
-            <th>{{ label }}</th>
-            <td>
-                {% if source == "environment" %}
-                    <span class="status green"></span> Config / environment
-                {% else %}
-                    <span class="status orange"></span> <code>storage/editor-mcp/keys</code>. If your host clears storage on deploy, connected clients are signed out.
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<hr style="margin-top:2em;">
-
 <h2>Kill switch</h2>
 <p>One-click revoke of all tokens and disable all OAuth + MCP endpoints. Use during incident response.</p>
 <form method="post">

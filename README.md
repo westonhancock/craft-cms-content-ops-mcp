@@ -189,7 +189,7 @@ To keep the keys stable, move them into environment variables:
    ];
    ```
 
-**Settings → Editor MCP** shows where each key comes from. If a referenced env var is missing, the plugin logs a warning and falls back to `storage/`. If a value is set but invalid, the plugin returns an error instead of generating a new key. These two settings only come from the config file. The Control Panel never shows them or writes them to project config.
+If a referenced env var is missing, the plugin logs a warning and falls back to `storage/`. If a value is set but invalid, the plugin returns an error instead of generating a new key. These two settings only come from the config file. The Control Panel never shows them or writes them to project config.
 
 `privateKey` accepts raw PEM, PEM with `\n` escapes, or base64-encoded PEM.
 

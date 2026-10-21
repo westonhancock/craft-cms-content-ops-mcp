@@ -6,7 +6,6 @@
 
 - The OAuth keys can come from environment variables through the new `privateKey` and `encryptionKey` settings in `config/editor-mcp.php`. On hosts that clear `storage/` on deploy, connected assistants no longer get signed out after each deploy. The settings fall back to `storage/editor-mcp/keys/` when empty, so existing installs are unchanged.
 - `php craft editor-mcp/keys/generate` prints the two env lines. `--from-storage` exports the current keys so the switch signs nobody out.
-- The Settings page shows where each key comes from.
 
 ### Fixed
 

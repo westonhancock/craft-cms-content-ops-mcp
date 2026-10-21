@@ -191,19 +191,6 @@ class TokenService extends Component
     }
 
     /**
-     * Where each secret comes from, for the settings page.
-     *
-     * @return array{privateKey: 'environment'|'storage', encryptionKey: 'environment'|'storage'}
-     */
-    public function keySources(): array
-    {
-        return [
-            'privateKey' => $this->configuredValue('privateKey') !== null ? 'environment' : 'storage',
-            'encryptionKey' => $this->configuredValue('encryptionKey') !== null ? 'environment' : 'storage',
-        ];
-    }
-
-    /**
      * Reads the existing key files without generating anything, so they can be
      * moved into env vars without signing anyone out.
      *

@@ -113,7 +113,6 @@ class Plugin extends BasePlugin
     {
         return Craft::$app->getView()->renderTemplate('editor-mcp/_cp/settings', [
             'settings' => $this->getSettings(),
-            'keySources' => $this->tokens->keySources(),
         ]);
     }
 
