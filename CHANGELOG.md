@@ -1,6 +1,6 @@
 # Release Notes for Editor MCP
 
-## Unreleased
+## 0.2.0 - 2026-10-20
 
 ### Added
 
