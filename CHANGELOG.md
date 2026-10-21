@@ -4,52 +4,57 @@
 
 ### Added
 
-- The OAuth keys can come from environment variables through the new `privateKey` and `encryptionKey` settings in `config/editor-mcp.php`. On hosts that clear `storage/` on deploy, connected assistants no longer get signed out after each deploy. The settings fall back to `storage/editor-mcp/keys/` when empty, so existing installs are unchanged.
-- `php craft editor-mcp/keys/generate` prints the two env lines. `--from-storage` exports the current keys so the switch signs nobody out.
+- The OAuth keys can now come from environment variables. Use the new `privateKey` and `encryptionKey` settings in `config/editor-mcp.php`. Some hosts clear `storage/` at each deploy. On these hosts, connected assistants are no longer signed out after a deploy. If the settings are empty, the plugin uses `storage/editor-mcp/keys/`, so current installs do not change.
+- `php craft editor-mcp/keys/generate` prints the two env lines. With `--from-storage`, the command exports the current keys, so no user is signed out when you change to env vars.
 
 ### Fixed
 
-- The Control Panel sidebar no longer shows a second, icon-less "Editor MCP" item. The plugin registered its nav item twice (once through `hasCpSection`, once through `EVENT_REGISTER_CP_NAV_ITEMS`); it now registers once via `getCpNavItem()`, with the icon and subnav.
-- The Scopes column on the Tokens page no longer wraps one character per line. Scopes were rendered inside Craft's `.status` dot element; they now render as plain `<code>` labels.
+- The Control Panel sidebar no longer shows a second "Editor MCP" item without an icon. The plugin registered its nav item two times: one time through `hasCpSection`, and one time through `EVENT_REGISTER_CP_NAV_ITEMS`. Now it registers the item one time through `getCpNavItem()`, with the icon and the subnav.
+- On the Tokens page, the text in the Scopes column no longer shows one character on each line. The cause was Craft's `.status` element, which is a small dot. Now each scope shows as a `<code>` label.
 
 ## 0.1.1 - 2026-06-25
 
 ### Fixed
 
-- `get_entry` now expands Matrix fields inline — each block is returned with its `type` and full (recursively serialized) field content, instead of bare `{id, title}` stubs. Fetching a nested block id directly no longer errors.
+- `get_entry` now shows the content of Matrix fields. Each block has its `type` and all of its field content, at all levels. Before, the tool gave only `{id, title}` for each block. When you get a nested block by its id, the tool no longer gives an error.
 
 ### Added
 
-- Continuous integration (GitHub Actions): ECS, PHPStan, and a PHPUnit unit suite run on every push and pull request.
+- Continuous integration (GitHub Actions). ECS, PHPStan, and a PHPUnit unit suite run at each push and pull request.
 
 ### Changed
 
-- Licensed under the [Craft License](LICENSE.md) to match the plugin's paid Plugin Store listing (previously MIT). `composer.json` license set to `proprietary`.
+- The license is now the [Craft License](LICENSE.md), because the plugin is a paid Plugin Store item. The previous license was MIT. The `composer.json` license is now `proprietary`.
 
 ## 0.1.0 - 2026-06-12
 
-Initial release. An OAuth-authenticated MCP server for Craft CMS that lets AI
-assistants perform content operations as a named editor, with Craft-native
-permission enforcement.
+First release. Editor MCP is an MCP server for Craft CMS that uses OAuth. AI assistants can do content work as a named editor. Craft permissions apply to each action.
 
 ### Added
 
-- **15-tool content-ops surface** — discovery (`list_sections`, `list_section_fields`, `list_asset_volumes`), entries (`find_entries`, `get_entry`, `create_entry`, `update_entry_fields`, `set_entry_status`, `delete_entry`), assets (`find_assets`, `get_asset`, `upload_asset`), categories/globals (`list_categories`, `get_global`), and `who_am_i`. Intent-shaped, not API-shaped.
-- **OAuth 2.1 + PKCE + Dynamic Client Registration** over HTTP/SSE — the formal MCP auth flow, built on `league/oauth2-server`. RFC 8414/9728 discovery, RFC 7591 DCR, RFC 7009 revocation.
-- **Per-user identity binding** — every session resolves to exactly one Craft user; tool calls execute as that user, so per-section and per-element permissions are enforced natively. Authorization is OAuth scope ∧ Craft permission.
-- **Capability-grouped scopes** — `content:read`, `content:write`, `content:publish`, `content:delete`, `assets:write` — surfaced on a plain-English consent screen.
-- **High-stakes elevation** — `content:publish` / `content:delete` require a fresh elevated session via an in-band `/oauth/elevate` flow.
-- **Refresh-token rotation with theft detection** — replaying a consumed token revokes the entire chain.
-- **Control panel UI** — token list/revoke, audit log browser, and per-environment configuration. Ships disabled in production.
-- **Security controls** — per-user rate limiting, optional IP allowlist, DCR approval gate and per-IP rate limit, server-side asset MIME validation, security-event webhooks, audit retention pruning, and a kill switch.
+- **15 content tools.** Discovery: `list_sections`, `list_section_fields`, `list_asset_volumes`. Entries: `find_entries`, `get_entry`, `create_entry`, `update_entry_fields`, `set_entry_status`, `delete_entry`. Assets: `find_assets`, `get_asset`, `upload_asset`. Categories and globals: `list_categories`, `get_global`. Identity: `who_am_i`. Each tool does one editor task. The tools do not copy the Craft API.
+- **OAuth 2.1 with PKCE and Dynamic Client Registration** over HTTP/SSE. This is the MCP auth flow, and it uses `league/oauth2-server`. The plugin supports RFC 8414 and RFC 9728 discovery, RFC 7591 client registration, and RFC 7009 revocation.
+- **One Craft user for each session.** Each tool call runs as that user, so Craft applies its section and element permissions. An action must have the OAuth scope and the Craft permission.
+- **Scopes in groups.** The scopes are `content:read`, `content:write`, `content:publish`, `content:delete`, and `assets:write`. The consent screen shows them in plain English.
+- **Password check for high-risk scopes.** For `content:publish` and `content:delete`, the user must enter the password again through the `/oauth/elevate` flow.
+- **Refresh token rotation.** If a used refresh token is sent again, the plugin revokes all tokens in that chain.
+- **Control Panel pages.** Token list and revocation, an audit log, and configuration for each environment. The plugin is disabled after you install it.
+- **Security controls:**
+  - Rate limits for each user
+  - An optional IP allowlist
+  - An approval gate and a per-IP limit for client registration
+  - MIME checks for asset uploads on the server
+  - Webhooks for security events
+  - Deletion of old audit entries
+  - A kill switch
 
 ### Security
 
-- Element-level authorization on every tool: reads gate on `canView()`, writes on `canSave()`, deletes on `canDelete()` — peer/draft restrictions included.
-- `find_entries` `orderBy` is allowlisted to known columns resolved as Yii sort specs (no raw SQL expressions).
-- Asset upload folder paths are validated against traversal, separators, and control characters.
+- Each tool checks permissions on each element. Reads use `canView()`, writes use `canSave()`, and deletes use `canDelete()`. These checks include peer and draft restrictions.
+- `find_entries` accepts only known columns for `orderBy`. The plugin converts them to Yii sort specs and does not accept raw SQL.
+- The plugin checks asset upload folder paths for traversal, path separators, and control characters.
 
 ### Verified
 
-- End-to-end against a real Craft 5.9 install (Postgres and MySQL) — 36 scripted checks plus a limited-permission deny-path proof.
-- PHPStan level 5 and ECS (PSR-12) clean.
+- Tested end to end on a Craft 5.9 install with Postgres and with MySQL. The tests had 36 scripted checks, and one more test proved that a user with limited permissions gets a deny.
+- PHPStan level 5 and ECS (PSR-12) show no errors.

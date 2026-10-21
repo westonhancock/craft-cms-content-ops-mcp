@@ -1,14 +1,12 @@
 # Editor MCP for Craft CMS
 
-Editor MCP turns your Craft site into a [Model Context Protocol](https://modelcontextprotocol.io) server, so AI assistants — Claude Code, Claude Desktop, Cursor, Codex, and any other MCP client — can read and edit your content for you.
+Editor MCP adds a [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server to your Craft site. AI assistants can then read and edit your content. Claude Code, Claude Desktop, Cursor, Codex, and other MCP clients are supported.
 
-You connect the assistant once through a normal Craft login. From then on it acts **as you**: it can only see and change what your Craft account is allowed to, and every action runs through Craft's own permission system. No API keys to mint, no service accounts, no shell access.
+You connect an assistant one time through the usual Craft login. After that, the assistant acts **as you**. It can see and change only the content that your Craft account can see and change. Craft's permission system checks each action. You do not make API keys or service accounts, and the assistant gets no shell access.
 
-Ask things like *“find the last five news entries,”* *“draft a post titled X with this body,”* or *“update the summary on entry 1234,”* and the assistant uses the tools below to do it.
-
-- Works with **Craft 5.0+** and **PHP 8.2+**
-- Connects over HTTPS using standard OAuth — the assistant opens your browser, you log in to Craft, you approve, done
-- 15 focused content tools (entries, assets, sections, categories, globals)
+- Craft 5.0 or later, and PHP 8.2 or later
+- HTTPS and standard OAuth. The assistant opens your browser, you log in to Craft, and you approve the connection.
+- 15 content tools for entries, assets, sections, categories, and globals
 
 ## Screenshots
 
@@ -26,7 +24,9 @@ Ask things like *“find the last five news entries,”* *“draft a post titled
 
 **From the Craft Plugin Store**
 
-Control Panel → **Plugin Store** → search **Editor MCP** → **Install**.
+1. In the Control Panel, go to **Plugin Store**.
+2. Search for **Editor MCP**.
+3. Click **Install**.
 
 **With Composer**
 
@@ -36,11 +36,15 @@ composer require westonhancock/craft-editor-mcp
 php craft plugin/install editor-mcp
 ```
 
-### Turn it on
+### Enable the plugin
 
-The plugin ships **disabled**. In the Control Panel go to **Settings → Editor MCP**, toggle **Enabled**, and save. That's the only required setting — everything else has sensible defaults.
+The plugin is disabled after you install it. **Enabled** is the only setting that you must change. All other settings have safe default values.
 
-Your MCP endpoint is your site URL with `/mcp` on the end:
+1. In the Control Panel, go to **Settings → Editor MCP**.
+2. Set **Enabled** to on.
+3. Click **Save**.
+
+Your MCP endpoint is your site URL followed by `/mcp`:
 
 ```
 https://your-craft-site.example/mcp
@@ -50,21 +54,33 @@ https://your-craft-site.example/mcp
 
 ## Connect your assistant
 
-Every client points at the same `/mcp` URL. The first time you connect, the assistant opens your browser, you log into Craft (including 2FA if you use it), you approve the access screen, and you're connected. Swap `https://your-craft-site.example/mcp` for your real endpoint in the examples below.
+All clients use the same `/mcp` URL. In the examples below, replace `https://your-craft-site.example/mcp` with your endpoint.
+
+When you connect for the first time, the procedure is the same for all clients:
+
+1. The assistant opens your browser.
+2. Log in to Craft. If your account uses 2FA, Craft asks for your code.
+3. On the access screen, click **Allow**.
 
 ### Claude Code
 
-```sh
-claude mcp add --transport http editor-mcp https://your-craft-site.example/mcp
-```
+1. Add the server:
 
-Start Claude Code, run `/mcp`, choose **editor-mcp**, and pick **Authenticate**. Your browser opens for the Craft login and approval.
+   ```sh
+   claude mcp add --transport http editor-mcp https://your-craft-site.example/mcp
+   ```
+
+2. Start Claude Code and run `/mcp`.
+3. Select **editor-mcp**, then select **Authenticate**.
+4. In the browser, log in to Craft and approve the connection.
 
 ### Claude Desktop
 
-Settings → **Connectors** → **Add custom connector**, then paste your `/mcp` URL and follow the browser login.
+1. Go to **Settings → Connectors → Add custom connector**.
+2. Paste your `/mcp` URL.
+3. In the browser, log in to Craft and approve the connection.
 
-If your version doesn't show custom connectors, add it to `claude_desktop_config.json` using the [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) bridge instead:
+If your version does not show custom connectors, use the [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) bridge. Add this to `claude_desktop_config.json`:
 
 ```json
 {
@@ -77,11 +93,11 @@ If your version doesn't show custom connectors, add it to `claude_desktop_config
 }
 ```
 
-Restart Claude Desktop; the browser login opens on first use.
+Restart Claude Desktop. The browser login opens the first time that you use the server.
 
 ### Cursor
 
-Settings → **MCP** → **Add new MCP server**, or edit `~/.cursor/mcp.json`:
+Go to **Settings → MCP → Add new MCP server**. You can also edit `~/.cursor/mcp.json`:
 
 ```json
 {
@@ -93,11 +109,11 @@ Settings → **MCP** → **Add new MCP server**, or edit `~/.cursor/mcp.json`:
 }
 ```
 
-Cursor handles the browser login on first connection.
+Cursor opens the browser login when it connects for the first time.
 
 ### Codex CLI
 
-Codex launches MCP servers as local commands, so use the [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) bridge in `~/.codex/config.toml`:
+Codex starts MCP servers as local commands. Use the [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) bridge in `~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.editor-mcp]
@@ -105,41 +121,45 @@ command = "npx"
 args = ["mcp-remote", "https://your-craft-site.example/mcp"]
 ```
 
-Run Codex; the browser login opens on first use.
+Run Codex. The browser login opens the first time that you use the server.
 
-> **Any other MCP client:** point it at the `/mcp` URL if it supports remote HTTP servers, or wrap it with `npx mcp-remote https://your-craft-site.example/mcp` if it only speaks stdio.
+> **Other MCP clients:** If the client supports remote HTTP servers, give it the `/mcp` URL. If the client supports only stdio, use `npx mcp-remote https://your-craft-site.example/mcp`.
 
 ---
 
 ## Tools
 
-| Tool | What it does |
+| Tool | Function |
 |---|---|
-| `list_sections` | List the sections in the site and the entry types each one supports |
-| `list_section_fields` | List the fields available on a section's entry types |
-| `list_asset_volumes` | List the asset volumes you can use |
-| `find_entries` | Search and filter entries in a section (by status, keywords, slug) |
-| `get_entry` | Get the full content of one entry, including all custom fields |
-| `create_entry` | Create a new entry (a draft by default) |
-| `update_entry_fields` | Update the title, slug, or custom fields on an entry |
-| `set_entry_status` | Publish, unpublish, or disable an entry |
-| `delete_entry` | Soft-delete an entry (recoverable from Craft's trash) |
-| `find_assets` | Search and filter assets in a volume |
-| `get_asset` | Get full metadata and the URL for one asset |
-| `upload_asset` | Upload a file (base64, up to 25 MB) into a volume |
-| `list_categories` | List the categories in a group |
-| `get_global` | Read a global set by handle |
-| `who_am_i` | Show who you're connected as and what you can do |
+| `list_sections` | Lists the sections in the site and the entry types of each section |
+| `list_section_fields` | Lists the fields on the entry types of a section |
+| `list_asset_volumes` | Lists the asset volumes that you can use |
+| `find_entries` | Finds entries in a section by status, keywords, or slug |
+| `get_entry` | Gets all content of one entry, with all custom fields |
+| `create_entry` | Makes a new entry. The default is a draft. |
+| `update_entry_fields` | Changes the title, slug, or custom fields of an entry |
+| `set_entry_status` | Publishes, unpublishes, or disables an entry |
+| `delete_entry` | Moves an entry to the Craft trash. You can restore it from the trash. |
+| `find_assets` | Finds assets in a volume |
+| `get_asset` | Gets all metadata and the URL of one asset |
+| `upload_asset` | Uploads a file (base64, 25 MB maximum) to a volume |
+| `list_categories` | Lists the categories in a group |
+| `get_global` | Reads a global set by its handle |
+| `who_am_i` | Shows the connected user and the permissions of the connection |
 
-### How permissions work
+### Permissions
 
-When you approve the connection you grant a set of capabilities — reading content, writing content, publishing, deleting, and uploading assets. The assistant can only use the ones you approve, and on top of that, **every action is checked against your Craft account**. If you can't edit a section in the Control Panel, the assistant can't either. Publishing and deleting ask for an extra confirmation of your login.
+When you approve a connection, you give it a set of permissions: read content, write content, publish, delete, and upload assets. The assistant can use only the permissions that you approve.
+
+Craft also checks **each action against your Craft account**. If you cannot edit a section in the Control Panel, the assistant also cannot edit it.
+
+The publish and delete permissions have more protection. If a connection asks for them, Craft asks for your password again before you can approve it.
 
 ---
 
-## Basic usage
+## Usage
 
-Once connected, just talk to your assistant in plain language. A few examples:
+After you connect, give instructions to your assistant in plain language. Examples:
 
 - “Who am I connected as?”
 - “What sections does this site have?”
@@ -150,35 +170,38 @@ Once connected, just talk to your assistant in plain language. A few examples:
 - “Publish entry 1234.”
 - “Upload this image to the `uploads` volume and set its alt text to …”
 
-The assistant decides which tools to call. New entries are created as drafts by default, so nothing goes live until you ask it to publish.
+The assistant selects the tools. New entries are drafts by default. An entry is not published until you tell the assistant to publish it.
 
 ---
 
 ## Configuration
 
-Everything lives under **Settings → Editor MCP** in the Control Panel:
+In the Control Panel, go to **Editor MCP**. The section has these pages:
 
-- **Tokens** — see every connected assistant, when it was last used, and revoke any of them
-- **Audit Log** — a record of every action taken through the plugin
-- **Settings** — enable/disable the plugin, and adjust optional limits
+- **Tokens:** Shows each connected assistant and when it was last used. You can revoke each token.
+- **Clients:** Shows each registered OAuth client. You can approve or revoke each client.
+- **Audit Log:** Shows a record of each action that the plugin did.
+- **Settings:** Enables or disables the plugin, and changes optional limits.
 
-Defaults are conservative and most sites never need to change anything beyond enabling the plugin.
+The default values are safe. Most sites need only the **Enabled** setting.
 
 ### Keys on hosts that clear storage
 
-The plugin signs and encrypts tokens with two keys it generates in `storage/editor-mcp/keys/`. Some hosts (Servd, for example) clear `storage/` on every deploy. When the keys change, every connected assistant is signed out and has to authenticate again.
+The plugin uses two keys to sign and encrypt tokens. It makes these keys in `storage/editor-mcp/keys/`. Some hosts, for example Servd, clear `storage/` at each deploy. When the keys change, all connected assistants are signed out. Each user must then authenticate again.
 
-To keep the keys stable, move them into environment variables:
+To keep the same keys, move them into environment variables:
 
-1. Print the current keys as env lines. `--from-storage` exports the keys the site already uses, so nobody is signed out by the switch. Leave it off to generate new keys.
+1. Print the current keys as env lines:
 
    ```sh
    php craft editor-mcp/keys/generate --from-storage
    ```
 
-2. Add the two printed lines (`EDITOR_MCP_PRIVATE_KEY`, `EDITOR_MCP_ENCRYPTION_KEY`) to your environment. Treat them like any other secret.
+   With `--from-storage`, the command exports the keys that the site uses now. No user is signed out when you change to env vars. Without `--from-storage`, the command makes new keys.
 
-3. Reference them in `config/editor-mcp.php`:
+2. Add the two printed lines (`EDITOR_MCP_PRIVATE_KEY` and `EDITOR_MCP_ENCRYPTION_KEY`) to your environment. Keep them secret.
+
+3. Add references to them in `config/editor-mcp.php`:
 
    ```php
    <?php
@@ -189,38 +212,50 @@ To keep the keys stable, move them into environment variables:
    ];
    ```
 
-If a referenced env var is missing, the plugin logs a warning and falls back to `storage/`. If a value is set but invalid, the plugin returns an error instead of generating a new key. These two settings only come from the config file. The Control Panel never shows them or writes them to project config.
+If a referenced env var is not set, the plugin logs a warning and uses the keys in `storage/`. If a value is set but is not valid, the plugin shows an error. It does not make a new key.
+
+You can set these two settings only in the config file. The Control Panel does not show them, and it does not write them to project config.
 
 `privateKey` accepts raw PEM, PEM with `\n` escapes, or base64-encoded PEM.
 
 ---
 
-## What it does not do
+## Limits
 
-Editor MCP is intentionally limited to everyday content work. It does **not** expose database queries, user management, plugin or system configuration, or arbitrary code execution. If you need that kind of access, use the Control Panel directly.
+Editor MCP is only for content work. It does **not** give access to database queries, user management, plugin or system configuration, or code execution. For these tasks, use the Control Panel.
 
 ---
 
 ## Local development
 
-Symlink the plugin into a Craft site via a Composer path repository for fast iteration. From the Craft site root:
+Use a Composer path repository to symlink the plugin into a Craft site. Then your changes to the source are live at the next request.
 
-```json
-{
-  "repositories": [
-    {"type": "path", "url": "../craft-cms-content-ops-mcp", "options": {"symlink": true}}
-  ],
-  "require": {
-    "westonhancock/craft-editor-mcp": "@dev"
-  }
-}
-```
+1. In the `composer.json` file of the Craft site, add the path repository and the package:
 
-Then `composer update westonhancock/craft-editor-mcp` and `php craft plugin/install editor-mcp`. Edits to the source tree are live on the next request.
+   ```json
+   {
+     "repositories": [
+       {"type": "path", "url": "../craft-cms-content-ops-mcp", "options": {"symlink": true}}
+     ],
+     "require": {
+       "westonhancock/craft-editor-mcp": "@dev"
+     }
+   }
+   ```
+
+2. Install the package:
+
+   ```sh
+   composer update westonhancock/craft-editor-mcp
+   php craft plugin/install editor-mcp
+   ```
+
+To examine the code, run these commands:
 
 ```sh
 vendor/bin/phpstan analyse --memory-limit=1G   # static analysis
 vendor/bin/ecs check                            # code style
+vendor/bin/phpunit                              # unit tests
 ```
 
 ---
@@ -232,4 +267,4 @@ vendor/bin/ecs check                            # code style
 
 ## License
 
-This is commercial software. Licensed under the [Craft License](LICENSE.md) — a paid license entitles use in a single production environment. See [LICENSE.md](LICENSE.md) for the full terms.
+This is commercial software. The [Craft License](LICENSE.md) applies. One paid license permits use in one production environment. For the full terms, see [LICENSE.md](LICENSE.md).
