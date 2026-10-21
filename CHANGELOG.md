@@ -1,5 +1,17 @@
 # Release Notes for Editor MCP
 
+## 0.2.0 - 2026-10-20
+
+### Added
+
+- The OAuth keys can come from environment variables through the new `privateKey` and `encryptionKey` settings in `config/editor-mcp.php`. On hosts that clear `storage/` on deploy, connected assistants no longer get signed out after each deploy. The settings fall back to `storage/editor-mcp/keys/` when empty, so existing installs are unchanged.
+- `php craft editor-mcp/keys/generate` prints the two env lines. `--from-storage` exports the current keys so the switch signs nobody out.
+
+### Fixed
+
+- The Control Panel sidebar no longer shows a second, icon-less "Editor MCP" item. The plugin registered its nav item twice (once through `hasCpSection`, once through `EVENT_REGISTER_CP_NAV_ITEMS`); it now registers once via `getCpNavItem()`, with the icon and subnav.
+- The Scopes column on the Tokens page no longer wraps one character per line. Scopes were rendered inside Craft's `.status` dot element; they now render as plain `<code>` labels.
+
 ## 0.1.1 - 2026-06-25
 
 ### Fixed

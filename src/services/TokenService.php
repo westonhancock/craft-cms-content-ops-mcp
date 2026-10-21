@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace westonhancock\editormcp\services;
 
 use Craft;
+use craft\helpers\App;
 use DateInterval;
 use DateTimeImmutable;
 use Defuse\Crypto\Crypto;
@@ -35,9 +36,12 @@ use yii\base\InvalidConfigException;
 /**
  * Owns the league/oauth2-server instance and key material.
  *
- * Keys live on disk under storage/editor-mcp/keys (file mode 0600). If they
- * don't exist, init() generates them. Encryption secret is stored in
- * Craft's app config-backed parameter store via Craft::parseEnv.
+ * Two secrets: the RSA private key (signs access-token JWTs; the public key is
+ * derived from it) and the encryption key (encrypts refresh tokens). Each
+ * comes from its plugin setting (`privateKey` / `encryptionKey`, usually an
+ * `$ENV_VAR` reference) when set, otherwise from storage/editor-mcp/keys,
+ * where it is generated on first use. Hosts that wipe storage on deploy
+ * should use the settings, or every connected client is signed out.
  */
 class TokenService extends Component
 {
@@ -45,6 +49,8 @@ class TokenService extends Component
 
     private ?AuthorizationServer $authServer = null;
     private ?ResourceServer $resourceServer = null;
+    private ?string $privateKeyPem = null;
+    private ?string $encryptionKeyValue = null;
 
     public function getAuthorizationServer(): AuthorizationServer
     {
@@ -131,7 +137,7 @@ class TokenService extends Component
             $parsed = (new JwtParser(new JoseEncoder()))->parse($token);
             $signedByUs = (new Validator())->validate(
                 $parsed,
-                new SignedWith(new Sha256(), InMemory::file($this->keyPath('public.key'))),
+                new SignedWith(new Sha256(), InMemory::plainText(KeyMaterial::publicKeyFromPrivate($this->privateKeyPem()))),
             );
             if ($signedByUs && $parsed instanceof UnencryptedToken) {
                 $jti = $parsed->claims()->get('jti');
@@ -184,53 +190,102 @@ class TokenService extends Component
         RefreshTokenRecord::updateAll(['revokedAt' => $now], ['revokedAt' => null]);
     }
 
+    /**
+     * Reads the existing key files without generating anything, so they can be
+     * moved into env vars without signing anyone out.
+     *
+     * @return array{privateKey: string, encryptionKey: string}
+     */
+    public function readStorageKeys(): array
+    {
+        $out = [];
+        foreach (['privateKey' => 'private.key', 'encryptionKey' => 'encryption.key'] as $k => $file) {
+            $path = $this->keyDir() . '/' . $file;
+            if (!is_file($path)) {
+                throw new InvalidConfigException("$path does not exist");
+            }
+            $out[$k] = trim((string) file_get_contents($path));
+        }
+        return $out;
+    }
+
     private function privateKey(): CryptKey
     {
-        return new CryptKey($this->keyPath('private.key'), null, false);
+        return new CryptKey($this->privateKeyPem(), null, false);
     }
 
     private function publicKey(): CryptKey
     {
-        return new CryptKey($this->keyPath('public.key'), null, false);
+        return new CryptKey(KeyMaterial::publicKeyFromPrivate($this->privateKeyPem()), null, false);
+    }
+
+    private function privateKeyPem(): string
+    {
+        if ($this->privateKeyPem !== null) {
+            return $this->privateKeyPem;
+        }
+        $configured = $this->configuredValue('privateKey');
+        if ($configured !== null) {
+            try {
+                return $this->privateKeyPem = KeyMaterial::normalizePrivateKey($configured);
+            } catch (\InvalidArgumentException $e) {
+                throw new InvalidConfigException('Editor MCP: the privateKey setting is invalid: ' . $e->getMessage());
+            }
+        }
+
+        $path = $this->keyDir() . '/private.key';
+        if (!is_file($path)) {
+            $this->writeKeyFile('private.key', KeyMaterial::generatePrivateKey());
+        }
+        return $this->privateKeyPem = (string) file_get_contents($path);
     }
 
     private function encryptionKey(): string
     {
+        if ($this->encryptionKeyValue !== null) {
+            return $this->encryptionKeyValue;
+        }
+        $configured = $this->configuredValue('encryptionKey');
+        if ($configured !== null) {
+            try {
+                return $this->encryptionKeyValue = KeyMaterial::normalizeEncryptionKey($configured);
+            } catch (\InvalidArgumentException $e) {
+                throw new InvalidConfigException('Editor MCP: the encryptionKey setting is invalid: ' . $e->getMessage());
+            }
+        }
+
         $path = $this->keyDir() . '/encryption.key';
         if (!is_file($path)) {
-            $this->ensureKeyDir();
-            file_put_contents($path, base64_encode(random_bytes(32)));
-            chmod($path, 0600);
+            $this->writeKeyFile('encryption.key', KeyMaterial::generateEncryptionKey());
         }
-        return trim((string) file_get_contents($path));
+        return $this->encryptionKeyValue = trim((string) file_get_contents($path));
     }
 
-    private function keyPath(string $name): string
+    /**
+     * The setting's resolved value, or null to fall back to storage. A setting
+     * that points at a missing env var falls back too, with a warning, so a
+     * dev machine without the var still works.
+     */
+    private function configuredValue(string $setting): ?string
     {
-        $path = $this->keyDir() . '/' . $name;
-        if (!is_file($path)) {
-            $this->generateKeyPair();
+        $raw = Plugin::$plugin->getSettings()->$setting;
+        if ($raw === '') {
+            return null;
         }
-        return $path;
+        $value = App::parseEnv($raw);
+        if (!is_string($value) || trim($value) === '') {
+            Craft::warning("Editor MCP: the $setting setting resolves to an empty value; using storage/editor-mcp/keys instead.", __METHOD__);
+            return null;
+        }
+        return $value;
     }
 
-    private function generateKeyPair(): void
+    private function writeKeyFile(string $name, string $contents): void
     {
         $this->ensureKeyDir();
-        $res = openssl_pkey_new([
-            'private_key_bits' => 4096,
-            'private_key_type' => OPENSSL_KEYTYPE_RSA,
-        ]);
-        if (!$res) {
-            throw new InvalidConfigException('Failed to generate OAuth key pair');
-        }
-        openssl_pkey_export($res, $priv);
-        $pub = openssl_pkey_get_details($res)['key'];
-        $dir = $this->keyDir();
-        file_put_contents($dir . '/private.key', $priv);
-        chmod($dir . '/private.key', 0600);
-        file_put_contents($dir . '/public.key', $pub);
-        chmod($dir . '/public.key', 0644);
+        $path = $this->keyDir() . '/' . $name;
+        file_put_contents($path, $contents);
+        chmod($path, 0600);
     }
 
     private function keyDir(): string

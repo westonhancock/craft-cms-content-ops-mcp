@@ -12,7 +12,7 @@
         "oauth",
         "content"
     ],
-    "version": "0.1.1",
+    "version": "0.2.0",
     "license": "proprietary",
     "support": {
         "source": "https://github.com/westonhancock/craft-cms-content-ops-mcp",
@@ -29,6 +29,7 @@
     "require-dev": {
         "craftcms/ecs": "dev-main",
         "craftcms/phpstan": "dev-main",
+        "phpstan/phpstan": "^1.12",
         "phpunit/phpunit": "^10.5"
     },
     "autoload": {

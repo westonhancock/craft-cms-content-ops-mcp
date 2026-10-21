@@ -7,6 +7,7 @@ namespace westonhancock\editormcp\controllers;
 use Craft;
 use craft\helpers\UrlHelper;
 use craft\web\Controller;
+use westonhancock\editormcp\models\Settings;
 use westonhancock\editormcp\Plugin;
 use yii\web\Response;
 
@@ -30,7 +31,7 @@ class SettingsController extends Controller
         $settings = $plugin->getSettings();
         $textareaToArray = ['allowedRedirectSchemes', 'redirectUriPatterns', 'highStakesScopes', 'assetMimeAllowlist', 'ipAllowlist'];
         foreach ($params as $k => $v) {
-            if (!property_exists($settings, $k)) {
+            if (!property_exists($settings, $k) || in_array($k, Settings::SECRET_ATTRIBUTES, true)) {
                 continue;
             }
             if (is_string($v) && in_array($k, $textareaToArray, true)) {
@@ -38,7 +39,7 @@ class SettingsController extends Controller
             }
             $settings->$k = $this->coerceToPropertyType($settings, $k, $v);
         }
-        Craft::$app->getPlugins()->savePluginSettings($plugin, $settings->toArray());
+        Craft::$app->getPlugins()->savePluginSettings($plugin, $settings->toProjectConfig());
         Craft::$app->getSession()->setNotice('Settings saved.');
         return $this->redirect(UrlHelper::cpUrl('editor-mcp/settings'));
     }
@@ -76,7 +77,7 @@ class SettingsController extends Controller
         $plugin = Plugin::$plugin;
         $settings = $plugin->getSettings();
         $settings->killSwitch = !$settings->killSwitch;
-        Craft::$app->getPlugins()->savePluginSettings($plugin, $settings->toArray());
+        Craft::$app->getPlugins()->savePluginSettings($plugin, $settings->toProjectConfig());
         if ($settings->killSwitch) {
             $plugin->tokens->revokeAll();
             $plugin->security->notify('kill_switch_activated', [

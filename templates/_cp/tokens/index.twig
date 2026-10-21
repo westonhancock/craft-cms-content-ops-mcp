@@ -24,7 +24,7 @@
             <td>{{ r.username ?? "user #" ~ r.userId }}</td>
             <td>
                 {% for s in r.scopes|json_decode %}
-                    <span class="status">{{ s }}</span>
+                    <code style="white-space:nowrap">{{ s }}</code>{% if not loop.last %}<br>{% endif %}
                 {% endfor %}
             </td>
             <td>{{ r.dateCreated|date("Y-m-d H:i") }}</td>
