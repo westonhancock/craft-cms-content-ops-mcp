@@ -52,6 +52,10 @@ class Plugin extends BasePlugin
         parent::init();
         self::$plugin = $this;
 
+        if (Craft::$app->getRequest()->getIsConsoleRequest()) {
+            $this->controllerNamespace = 'westonhancock\\editormcp\\console\\controllers';
+        }
+
         $this->setComponents([
             'tokens' => TokenService::class,
             'permissions' => PermissionService::class,
@@ -109,6 +113,7 @@ class Plugin extends BasePlugin
     {
         return Craft::$app->getView()->renderTemplate('editor-mcp/_cp/settings', [
             'settings' => $this->getSettings(),
+            'keySources' => $this->tokens->keySources(),
         ]);
     }
 

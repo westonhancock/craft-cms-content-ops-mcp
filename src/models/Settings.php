@@ -16,6 +16,12 @@ use craft\base\Model;
  */
 class Settings extends Model
 {
+    /**
+     * Secrets that come from config/editor-mcp.php only. They are never shown
+     * in the CP and never written to project config.
+     */
+    public const SECRET_ATTRIBUTES = ['privateKey', 'encryptionKey'];
+
     public bool $enabled = false;
 
     /** seconds; capped at 3600 by TokenService */
@@ -66,6 +72,28 @@ class Settings extends Model
     /** Kill switch: when true, all OAuth + MCP endpoints return 503 */
     public bool $killSwitch = false;
 
+    /**
+     * RSA private key that signs access tokens, usually '$EDITOR_MCP_PRIVATE_KEY'.
+     * PEM or base64 PEM. Empty = storage/editor-mcp/keys/private.key.
+     */
+    public string $privateKey = '';
+
+    /**
+     * Encryption key for refresh tokens, usually '$EDITOR_MCP_ENCRYPTION_KEY'.
+     * Empty = storage/editor-mcp/keys/encryption.key.
+     */
+    public string $encryptionKey = '';
+
+    /**
+     * Settings as stored in project config, without the secrets.
+     *
+     * @return array<string, mixed>
+     */
+    public function toProjectConfig(): array
+    {
+        return array_diff_key($this->toArray(), array_flip(self::SECRET_ATTRIBUTES));
+    }
+
     public function defineRules(): array
     {
         return [
@@ -75,6 +103,7 @@ class Settings extends Model
             [['accessTokenTtl'], 'integer', 'max' => 3600],
             [['auditRetentionDays'], 'integer', 'min' => 1, 'skipOnEmpty' => true],
             [['securityWebhookUrl'], 'url', 'skipOnEmpty' => true],
+            [self::SECRET_ATTRIBUTES, 'string'],
         ];
     }
 }

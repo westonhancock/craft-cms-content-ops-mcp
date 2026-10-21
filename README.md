@@ -164,6 +164,35 @@ Everything lives under **Settings → Editor MCP** in the Control Panel:
 
 Defaults are conservative and most sites never need to change anything beyond enabling the plugin.
 
+### Keys on hosts that clear storage
+
+The plugin signs and encrypts tokens with two keys it generates in `storage/editor-mcp/keys/`. Some hosts (Servd, for example) clear `storage/` on every deploy. When the keys change, every connected assistant is signed out and has to authenticate again.
+
+To keep the keys stable, move them into environment variables:
+
+1. Print the current keys as env lines. `--from-storage` exports the keys the site already uses, so nobody is signed out by the switch. Leave it off to generate new keys.
+
+   ```sh
+   php craft editor-mcp/keys/generate --from-storage
+   ```
+
+2. Add the two printed lines (`EDITOR_MCP_PRIVATE_KEY`, `EDITOR_MCP_ENCRYPTION_KEY`) to your environment. Treat them like any other secret.
+
+3. Reference them in `config/editor-mcp.php`:
+
+   ```php
+   <?php
+
+   return [
+       'privateKey' => '$EDITOR_MCP_PRIVATE_KEY',
+       'encryptionKey' => '$EDITOR_MCP_ENCRYPTION_KEY',
+   ];
+   ```
+
+**Settings → Editor MCP** shows where each key comes from. If a referenced env var is missing, the plugin logs a warning and falls back to `storage/`. If a value is set but invalid, the plugin returns an error instead of generating a new key. These two settings only come from the config file. The Control Panel never shows them or writes them to project config.
+
+`privateKey` accepts raw PEM, PEM with `\n` escapes, or base64-encoded PEM.
+
 ---
 
 ## What it does not do
