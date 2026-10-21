@@ -29,6 +29,7 @@
     "require-dev": {
         "craftcms/ecs": "dev-main",
         "craftcms/phpstan": "dev-main",
+        "phpstan/phpstan": "^1.12",
         "phpunit/phpunit": "^10.5"
     },
     "autoload": {
