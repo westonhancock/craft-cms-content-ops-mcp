@@ -1,5 +1,13 @@
 # Release Notes for Editor MCP
 
+## 0.2.1 - 2026-10-20
+
+### Changed
+
+- The README and the CHANGELOG are now in ASD-STE100 (Simplified Technical English). The README procedures are now numbered steps.
+- The README now says the correct time of the password check for `content:publish` and `content:delete`. Craft asks for the password one time, when you approve the connection.
+- The README now lists the Clients page.
+
 ## 0.2.0 - 2026-10-20
 
 ### Added
