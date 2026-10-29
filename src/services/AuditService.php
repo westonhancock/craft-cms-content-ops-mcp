@@ -30,6 +30,8 @@ class AuditService extends Component
         'folder' => true,
         'mimeType' => true,
         'filename' => true,
+        // Records whether update_entry_fields wrote to live content or a draft.
+        'applyToLive' => true,
     ];
 
     public function log(array $payload): void

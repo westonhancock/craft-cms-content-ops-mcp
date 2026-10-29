@@ -12,6 +12,7 @@
 ### Added
 
 - `update_entry_fields` has a new `applyToLive` argument. With `applyToLive: true`, the tool saves directly to the canonical entry. This requires the `content:publish` scope.
+- The audit log records `applyToLive`, so you can see which edits changed live content.
 
 ### Security
 
