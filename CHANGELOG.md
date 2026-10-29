@@ -1,5 +1,22 @@
 # Release Notes for Editor MCP
 
+## Unreleased
+
+### Changed
+
+- `update_entry_fields` no longer changes live content. When the `id` is a canonical entry, the tool saves the changes into a draft named "Editor MCP draft". If the same user already has an Editor MCP draft of that entry, the tool updates that draft and does not make a new one. Drafts made in the Control Panel or by other users do not change. If the `id` is a draft, the tool updates that draft, as before.
+- To publish the draft, call `set_entry_status` with the draft `id`.
+- The `update_entry_fields` response now has `isDraft`, `draftId`, `canonicalId`, and `reusedDraft`.
+- `get_entry` now gives `isDraft` and `canonicalId`. For a canonical entry, it also lists the saved drafts that the user can view.
+
+### Added
+
+- `update_entry_fields` has a new `applyToLive` argument. With `applyToLive: true`, the tool saves directly to the canonical entry. This requires the `content:publish` scope.
+
+### Security
+
+- Before, a connection with only `content:write` could change a live entry through `update_entry_fields`. Now, changes to live content require `content:publish`. This agrees with `create_entry` and `set_entry_status`.
+
 ## 0.2.1 - 2026-10-20
 
 ### Changed
