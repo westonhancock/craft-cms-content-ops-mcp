@@ -151,7 +151,7 @@ Run Codex. The browser login opens the first time that you use the server.
 
 When you approve a connection, you give it a set of permissions: read content, write content, publish, delete, and upload assets. The assistant can use only the permissions that you approve.
 
-Craft also checks **each action against your Craft account**. If you cannot edit a section in the Control Panel, the assistant also cannot edit it.
+Craft also checks **each action against your Craft account**. If you cannot edit a section in the Control Panel, the assistant also cannot edit it. To make a draft of an entry, the assistant needs permission to save that entry. This rule is stricter than the Control Panel, where you can make a draft of any entry that you can view.
 
 The publish and delete permissions have more protection. If a connection asks for them, Craft asks for your password again before you can approve it.
 
