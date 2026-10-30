@@ -1,11 +1,12 @@
 # Release Notes for Editor MCP
 
-## Unreleased
+## 0.3.0 - 2026-10-30
 
 ### Changed
 
 - `update_entry_fields` no longer changes live content. When the `id` is a canonical entry, the tool saves the changes into a draft named "Editor MCP draft". If the same user already has an Editor MCP draft of that entry, the tool updates that draft and does not make a new one. Drafts made in the Control Panel or by other users do not change. If the `id` is a draft, the tool updates that draft, as before.
 - To publish the draft, call `set_entry_status` with the draft `id`.
+- To make a draft of an entry, the user must have permission to save that entry. This rule is stricter than the Control Panel, where a user who can view an entry can make a draft of it.
 - The `update_entry_fields` response now has `isDraft`, `draftId`, `canonicalId`, and `reusedDraft`.
 - `get_entry` now gives `isDraft` and `canonicalId`. For a canonical entry, it also lists the saved drafts that the user can view.
 
