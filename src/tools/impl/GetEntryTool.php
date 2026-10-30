@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace westonhancock\editormcp\tools\impl;
 
 use Craft;
+use craft\behaviors\DraftBehavior;
 use craft\elements\Entry;
 use westonhancock\editormcp\tools\Tool;
 use westonhancock\editormcp\tools\ToolException;
@@ -18,7 +19,8 @@ class GetEntryTool implements Tool
 
     public function description(): string
     {
-        return 'Get the full content of a single entry by id. Includes all custom fields keyed by handle.';
+        return 'Get the full content of a single entry by id. Includes all custom fields keyed by handle. '
+            . 'For a canonical entry, drafts lists its saved drafts that you can view; pass a draft id to read that draft.';
     }
 
     public function inputSchema(): array
@@ -62,6 +64,8 @@ class GetEntryTool implements Tool
 
         return [
             'id' => $entry->id,
+            'isDraft' => $entry->getIsDraft(),
+            'canonicalId' => $entry->getIsUnpublishedDraft() ? null : $entry->getCanonicalId(),
             'title' => $entry->title,
             'slug' => $entry->slug,
             'status' => $entry->getStatus(),
@@ -72,7 +76,35 @@ class GetEntryTool implements Tool
             'dateUpdated' => $entry->dateUpdated?->format(\DateTimeInterface::ATOM),
             'authorId' => $entry->authorId,
             'fields' => $fields,
+            'drafts' => $entry->getIsDraft() ? [] : $this->listDrafts($entry, $user),
         ];
+    }
+
+    /** Saved (non-provisional) drafts of a canonical entry that $user can view, newest first. */
+    private function listDrafts(Entry $canonical, \craft\elements\User $user): array
+    {
+        $drafts = Entry::find()
+            ->drafts()
+            ->draftOf($canonical)
+            ->siteId($canonical->siteId)
+            ->status(null)
+            ->orderBy(['elements.dateUpdated' => SORT_DESC])
+            ->all();
+        $out = [];
+        foreach ($drafts as $draft) {
+            if (!Craft::$app->getElements()->canView($draft, $user)) {
+                continue;
+            }
+            $behavior = $draft->getBehavior('draft');
+            $out[] = [
+                'id' => $draft->id,
+                'draftId' => $draft->draftId,
+                'name' => $behavior instanceof DraftBehavior ? $behavior->draftName : null,
+                'creatorId' => $behavior instanceof DraftBehavior ? $behavior->creatorId : null,
+                'dateUpdated' => $draft->dateUpdated?->format(\DateTimeInterface::ATOM),
+            ];
+        }
+        return $out;
     }
 
     /** How deep to inline nested Matrix blocks before truncating. */

@@ -135,10 +135,10 @@ Run Codex. The browser login opens the first time that you use the server.
 | `list_section_fields` | Lists the fields on the entry types of a section |
 | `list_asset_volumes` | Lists the asset volumes that you can use |
 | `find_entries` | Finds entries in a section by status, keywords, or slug |
-| `get_entry` | Gets all content of one entry, with all custom fields |
+| `get_entry` | Gets all content of one entry, with all custom fields. For a live entry, it also lists the drafts of that entry. |
 | `create_entry` | Makes a new entry. The default is a draft. |
-| `update_entry_fields` | Changes the title, slug, or custom fields of an entry |
-| `set_entry_status` | Publishes, unpublishes, or disables an entry |
+| `update_entry_fields` | Changes the title, slug, or custom fields of an entry. The changes go into a draft. The live entry does not change. |
+| `set_entry_status` | Publishes, unpublishes, or disables an entry. When you publish a draft, the draft changes go live. |
 | `delete_entry` | Moves an entry to the Craft trash. You can restore it from the trash. |
 | `find_assets` | Finds assets in a volume |
 | `get_asset` | Gets all metadata and the URL of one asset |
@@ -171,6 +171,10 @@ After you connect, give instructions to your assistant in plain language. Exampl
 - “Upload this image to the `uploads` volume and set its alt text to …”
 
 The assistant selects the tools. New entries are drafts by default. An entry is not published until you tell the assistant to publish it.
+
+Changes to an existing entry also go into a draft, named "Editor MCP draft". The live entry does not change. If you ask for more changes to the same entry, the assistant adds them to the same draft. You can examine the draft in the Control Panel. To make the changes live, tell the assistant to publish the draft, or apply the draft in the Control Panel.
+
+A connection with the publish permission can save changes directly to the live entry. The assistant does this only when you tell it to.
 
 ---
 
